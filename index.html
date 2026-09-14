@@ -1022,6 +1022,20 @@
 
             data.blueMembers = cleanMemberList(data.blueMembers || []);
             data.redMembers = cleanMemberList(data.redMembers || []);
+
+            // 기존/신규 미션 객체의 표적 제원(undefined 방지) 안전 보정
+            ['blueMission', 'redMission'].forEach(mKey => {
+                if (data[mKey]) {
+                    const kills = mKey === 'blueMission' ? (data.blueKills || 0) : (data.redKills || 0);
+                    const tIndex = data[mKey].targetIndex || Math.min(7, kills + 1);
+                    const cfg = TARGET_CONFIGS[(tIndex - 1) % TARGET_CONFIGS.length] || TARGET_CONFIGS[0];
+                    data[mKey].targetIndex = tIndex;
+                    data[mKey].targetName = data[mKey].targetName || cfg.name;
+                    data[mKey].targetIcon = data[mKey].targetIcon || cfg.icon;
+                    data[mKey].targetType = data[mKey].targetType || cfg.type;
+                }
+            });
+
             lastKnownRoomData = data;
 
             if (data.lastSnipe && (!window.lastObservedSnipeId || window.lastObservedSnipeId !== data.lastSnipe.id)) {
@@ -1800,31 +1814,303 @@
 
             const isLocked = currentStage >= 3;
             const targetColor = isLocked ? '#ef4444' : '#34d399';
+            const tIndex = mission.targetIndex || 1;
+            const cfg = TARGET_CONFIGS[(tIndex - 1) % TARGET_CONFIGS.length] || TARGET_CONFIGS[0];
+            const targetName = mission.targetName || cfg.name;
+            const targetIcon = mission.targetIcon || cfg.icon;
+            const targetType = mission.targetType || cfg.type;
 
-            // Target Base Icon
-            ctx.font = '36px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(mission.targetIcon, 0, 0);
+            const time = Date.now();
+            const hoverOffset = Math.sin(time / 450) * 3;
 
-            // Target Name & Distance Badge
+            ctx.save();
+            ctx.translate(0, hoverOffset);
+
+            // 1. 고화질 전술 표적 벡터 그래픽 렌더링 (Target Entity Rendering)
+            drawTargetEntityVector(ctx, targetType, isLocked, targetColor, time);
+
+            ctx.restore();
+
+            // 2. 표적 식별 헤더 태그
             ctx.font = 'bold 11px "JetBrains Mono", monospace';
             ctx.fillStyle = targetColor;
-            ctx.fillText(`[${mission.targetIndex}번] ${mission.targetName}`, 0, -32);
+            ctx.textAlign = 'center';
+            ctx.fillText(`[${tIndex}번 표적] ${targetName}`, 0, -42);
 
-            // Locking reticle box
-            ctx.strokeStyle = targetColor;
-            ctx.lineWidth = isLocked ? 2.5 : 1.5;
-            ctx.shadowBlur = isLocked ? 16 : 6;
-            ctx.shadowColor = targetColor;
-
-            const boxSize = 28;
-            ctx.strokeRect(-boxSize, -boxSize, boxSize * 2, boxSize * 2);
-
+            // 3. 락온(LOCK-ON) 홀로그램 브래킷 & 십자선 연출
             if (isLocked) {
+                const pulse = Math.sin(time / 150) * 4;
+                const boxW = 44 + pulse;
+                const boxH = 34 + pulse;
+
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2.5;
+                ctx.shadowBlur = 18;
+                ctx.shadowColor = '#ef4444';
+
+                // 4모서리 전술 락온 브래킷 [ ]
+                const cornerLen = 12;
+                // 좌상단
+                ctx.beginPath();
+                ctx.moveTo(-boxW, -boxH + cornerLen);
+                ctx.lineTo(-boxW, -boxH);
+                ctx.lineTo(-boxW + cornerLen, -boxH);
+                // 우상단
+                ctx.moveTo(boxW - cornerLen, -boxH);
+                ctx.lineTo(boxW, -boxH);
+                ctx.lineTo(boxW, -boxH + cornerLen);
+                // 좌하단
+                ctx.moveTo(-boxW, boxH - cornerLen);
+                ctx.lineTo(-boxW, boxH);
+                ctx.lineTo(-boxW + cornerLen, boxH);
+                // 우하단
+                ctx.moveTo(boxW - cornerLen, boxH);
+                ctx.lineTo(boxW, boxH);
+                ctx.lineTo(boxW, boxH - cornerLen);
+                ctx.stroke();
+
+                // 표적 중앙 적색 타겟 십자점
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 락온 100% 경보 텍스트
+                ctx.font = 'bold 12px "Orbitron", sans-serif';
                 ctx.fillStyle = '#fca5a5';
-                ctx.font = 'bold 10px "Orbitron", sans-serif';
-                ctx.fillText("LOCK-ON 100%", 0, 32);
+                ctx.shadowBlur = 10;
+                ctx.fillText("⚠️ LOCK-ON 100% [READY TO SNIPE]", 0, 44);
+            } else {
+                // 탐색 중 조준 박스
+                ctx.strokeStyle = 'rgba(52, 211, 153, 0.4)';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(-32, -26, 64, 52);
+            }
+
+            ctx.restore();
+        }
+
+        // 7가지 전술 표적 정밀 벡터 렌더러
+        function drawTargetEntityVector(ctx, type, isLocked, color, time) {
+            ctx.save();
+            ctx.shadowBlur = isLocked ? 14 : 6;
+            ctx.shadowColor = color;
+
+            if (type === 'tower') {
+                // 🗼 1. 해안 감시 통신탑
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.fillStyle = '#06281e';
+
+                // 탑 다리 트러스 구조
+                ctx.beginPath();
+                ctx.moveTo(-18, 22);
+                ctx.lineTo(0, -22);
+                ctx.lineTo(18, 22);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // 내부 트러스 가로선
+                ctx.beginPath();
+                ctx.moveTo(-12, 8); ctx.lineTo(12, 8);
+                ctx.moveTo(-6, -6); ctx.lineTo(6, -6);
+                ctx.moveTo(0, -22); ctx.lineTo(0, -32); // 최상단 안테나 침
+                ctx.stroke();
+
+                // 점멸 통신 비컨 라이트
+                const blink = Math.floor(time / 300) % 2 === 0;
+                ctx.fillStyle = blink ? (isLocked ? '#f87171' : '#facc15') : '#334155';
+                ctx.beginPath();
+                ctx.arc(0, -32, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+            } else if (type === 'drone') {
+                // 🚁 2. 공중 정찰 드론
+                ctx.fillStyle = '#0f172a';
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+
+                // 중앙 본체
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 16, 9, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // 4개 프로펠러 암 & 회전 프로펠러
+                [-18, 18].forEach(dx => {
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(dx, -6);
+                    ctx.stroke();
+
+                    // 고속 회전 블레이드
+                    const rSpan = Math.abs(Math.sin(time / 60)) * 14 + 4;
+                    ctx.strokeStyle = isLocked ? '#f87171' : '#67e8f9';
+                    ctx.beginPath();
+                    ctx.moveTo(dx - rSpan, -6);
+                    ctx.lineTo(dx + rSpan, -6);
+                    ctx.stroke();
+                    ctx.strokeStyle = color;
+                });
+
+                // 감시 카메라 짐벌 렌즈
+                ctx.fillStyle = isLocked ? '#ef4444' : '#38bdf8';
+                ctx.beginPath();
+                ctx.arc(0, 5, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+            } else if (type === 'dome') {
+                // 🛰️ 3. 레이더 관측 돔
+                ctx.fillStyle = '#051b14';
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+
+                // 기지 벙커 콘크리트 베이스
+                ctx.fillRect(-24, 8, 48, 14);
+                ctx.strokeRect(-24, 8, 48, 14);
+
+                // 구형 지오데식 돔
+                ctx.beginPath();
+                ctx.arc(0, 8, 20, Math.PI, 0, false);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // 돔 상단 회전 레이더 안테나
+                const radAngle = (time / 400);
+                const rx = Math.cos(radAngle) * 16;
+                ctx.strokeStyle = isLocked ? '#f87171' : '#facc15';
+                ctx.beginPath();
+                ctx.moveTo(0, -12);
+                ctx.lineTo(rx, -20);
+                ctx.stroke();
+
+            } else if (type === 'boat') {
+                // 🚢 4. 해안 경비 초계정
+                ctx.fillStyle = '#0b1f18';
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+
+                // 선체
+                ctx.beginPath();
+                ctx.moveTo(-28, 12);
+                ctx.lineTo(24, 12);
+                ctx.lineTo(34, 0);
+                ctx.lineTo(-24, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // 함교 및 마스트
+                ctx.fillRect(-12, -10, 18, 10);
+                ctx.strokeRect(-12, -10, 18, 10);
+
+                ctx.beginPath();
+                ctx.moveTo(-4, -10); ctx.lineTo(-4, -20); // 마스트
+                ctx.moveTo(14, 0); ctx.lineTo(22, -6); // 함수 함포
+                ctx.stroke();
+
+                // 해수면 파도
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+                ctx.beginPath();
+                ctx.moveTo(-32, 14); ctx.lineTo(36, 14);
+                ctx.stroke();
+
+            } else if (type === 'sam') {
+                // 🚀 5. 대공 미사일 포대
+                ctx.fillStyle = '#111827';
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+
+                // 발사대 캐터필러 받침
+                ctx.fillRect(-22, 10, 44, 12);
+                ctx.strokeRect(-22, 10, 44, 12);
+
+                // 경사각 트윈 미사일 런처
+                [-7, 7].forEach(offset => {
+                    ctx.save();
+                    ctx.translate(offset, 4);
+                    ctx.rotate(-Math.PI / 4);
+                    ctx.fillStyle = isLocked ? '#991b1b' : '#334155';
+                    ctx.fillRect(0, -5, 26, 10);
+                    ctx.strokeRect(0, -5, 26, 10);
+                    // 미사일 탄두
+                    ctx.fillStyle = isLocked ? '#f87171' : '#facc15';
+                    ctx.beginPath();
+                    ctx.moveTo(26, -5); ctx.lineTo(34, 0); ctx.lineTo(26, 5);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                });
+
+            } else if (type === 'heli') {
+                // 🛸 6. 기동 강습 헬기
+                ctx.fillStyle = '#0f172a';
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+
+                // 헬기 동체
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 24, 12, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // 꼬리 날개 붐
+                ctx.beginPath();
+                ctx.moveTo(-24, 0); ctx.lineTo(-42, -4); ctx.lineTo(-42, -14);
+                ctx.stroke();
+
+                // 메인 로터 블레이드
+                const rotorSpan = Math.abs(Math.sin(time / 45)) * 34 + 6;
+                ctx.strokeStyle = isLocked ? '#f87171' : '#67e8f9';
+                ctx.beginPath();
+                ctx.moveTo(-rotorSpan, -16); ctx.lineTo(rotorSpan, -16);
+                ctx.stroke();
+
+                // 랜딩 스키드
+                ctx.strokeStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(-16, 12); ctx.lineTo(16, 12);
+                ctx.moveTo(-8, 6); ctx.lineTo(-8, 12);
+                ctx.moveTo(8, 6); ctx.lineTo(8, 12);
+                ctx.stroke();
+
+            } else {
+                // 👾 7. 지휘관 중장갑 건쉽 (최종 보스)
+                ctx.fillStyle = '#030712';
+                ctx.strokeStyle = isLocked ? '#ef4444' : '#f59e0b';
+                ctx.lineWidth = 2.5;
+
+                // 거대 델타익 장갑 본체
+                ctx.beginPath();
+                ctx.moveTo(0, -24);
+                ctx.lineTo(34, 14);
+                ctx.lineTo(16, 18);
+                ctx.lineTo(0, 10);
+                ctx.lineTo(-16, 18);
+                ctx.lineTo(-34, 14);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // 보스 플라즈마 리액터 코어 펄스
+                const corePulse = Math.sin(time / 120) * 3 + 6;
+                ctx.fillStyle = isLocked ? '#f87171' : '#38bdf8';
+                ctx.beginPath();
+                ctx.arc(0, -2, corePulse, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 트윈 제트 엔진 불꽃
+                [-14, 14].forEach(ex => {
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.beginPath();
+                    ctx.moveTo(ex - 4, 16);
+                    ctx.lineTo(ex + 4, 16);
+                    ctx.lineTo(ex, 24 + Math.random() * 6);
+                    ctx.closePath();
+                    ctx.fill();
+                });
             }
 
             ctx.restore();
