@@ -1,0 +1,1922 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>트리고 스나이퍼: 삼각비 특수작전 - 중3 수학 4인 실시간 협동 배틀</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@500;700;800&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Jua', 'Inter', sans-serif; }
+        .font-tactical { font-family: 'Orbitron', 'Black Han Sans', sans-serif; }
+        .font-mono-code { font-family: 'JetBrains Mono', monospace; }
+        
+        .sniper-grid-bg {
+            background-color: #030806;
+            background-image: 
+                linear-gradient(rgba(34, 197, 94, 0.07) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34, 197, 94, 0.07) 1px, transparent 1px),
+                radial-gradient(circle at 50% 20%, #064e3b 0%, #021a12 60%, #010805 100%);
+            background-size: 28px 28px, 28px 28px, 100% 100%;
+        }
+
+        .neon-border-green {
+            border: 2px solid #22c55e;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.35), inset 0 0 15px rgba(34, 197, 94, 0.15);
+        }
+
+        .neon-border-amber {
+            border: 2px solid #f59e0b;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.35), inset 0 0 15px rgba(245, 158, 11, 0.15);
+        }
+
+        .hud-corner {
+            position: relative;
+        }
+        .hud-corner::before, .hud-corner::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-color: #4ade80;
+            pointer-events: none;
+        }
+        .hud-corner::before { top: -2px; left: -2px; border-top: 3px solid; border-left: 3px solid; }
+        .hud-corner::after { bottom: -2px; right: -2px; border-bottom: 3px solid; border-right: 3px solid; }
+
+        @keyframes scopeReticlePulse {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.6)); }
+            50% { filter: drop-shadow(0 0 26px rgba(34, 197, 94, 0.95)) drop-shadow(0 0 45px rgba(74, 222, 128, 0.5)); }
+        }
+        .scope-pulse {
+            animation: scopeReticlePulse 2.5s infinite ease-in-out;
+        }
+
+        @keyframes dangerAlert {
+            from { border-color: #ef4444; background-color: rgba(239, 68, 68, 0.3); }
+            to { border-color: #f59e0b; background-color: rgba(245, 158, 11, 0.4); }
+        }
+        .danger-siren {
+            animation: dangerAlert 0.75s infinite alternate;
+        }
+
+        .crosshair-text {
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.8), 2px 2px #065f46;
+        }
+    </style>
+</head>
+<body class="sniper-grid-bg text-white min-h-screen flex flex-col justify-between p-2 md:p-5 select-none relative overflow-x-hidden">
+
+    <!-- Top Tactical Telemetry Bar -->
+    <div class="max-w-6xl w-full mx-auto flex items-center justify-between text-[11px] font-mono-code text-emerald-400 border-b border-emerald-500/30 pb-1.5 mb-2">
+        <div class="flex items-center gap-2">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <span class="font-bold tracking-widest text-emerald-300">SNIPER_OPTICS: LOCK_READY</span>
+            <span class="text-slate-600">|</span>
+            <span class="hidden sm:inline text-slate-400">TRIGONOMETRY: sin θ · cos θ · tan θ</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-yellow-300 font-bold">SPECIAL_ANGLES: 30° / 45° / 60°</span>
+            <span class="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/50 text-emerald-300">BALLISTIC_RANGE</span>
+        </div>
+    </div>
+
+    <!-- Header Banner -->
+    <header class="text-center mb-3">
+        <div class="flex items-center justify-center gap-3">
+            <span class="text-3xl md:text-4xl">🎯</span>
+            <h1 class="text-3xl md:text-5xl font-tactical tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-yellow-300 crosshair-text font-black">
+                TRIGO SNIPER
+            </h1>
+            <span class="text-3xl md:text-4xl">🔭</span>
+        </div>
+        <p class="text-xs md:text-sm text-emerald-300/90 mt-1 font-mono-code tracking-wide">
+            [중3 삼각비] 직각삼각형 변의 비 · 30°·45°·60° 특수각 삼각비 · 고도/거리 산출 · 4인 실시간 특수작전
+        </p>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="max-w-6xl w-full mx-auto flex-1 flex flex-col justify-center gap-3">
+
+        <!-- 1. Lobby Screen -->
+        <div id="lobby-screen" class="bg-slate-950/90 neon-border-green rounded-3xl p-6 md:p-10 shadow-2xl backdrop-blur-xl hud-corner">
+            <div class="text-center mb-8">
+                <div class="inline-block px-4 py-1 rounded-full bg-emerald-950 border border-emerald-400/50 text-emerald-300 text-xs font-mono-code font-bold mb-2 tracking-widest">
+                    // SPECIAL TACTICAL SNIPER SQUAD //
+                </div>
+                <h2 class="text-2xl md:text-3xl font-tactical text-emerald-300 mb-2">저격 부대원 편제 등록</h2>
+                <p class="text-xs md:text-sm text-slate-300">
+                    배틀룸 코드를 공유한 전우들과 팀을 이뤄 삼각비 공식으로 표적의 거리와 고도를 산출하고 적 지휘 드론을 요격하세요!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+                <div class="bg-slate-900/90 p-5 rounded-2xl border border-emerald-500/40">
+                    <label class="block text-sm font-semibold mb-2 text-emerald-300 flex items-center gap-2">
+                        <span>👤</span> 저격 특수요원 닉네임
+                    </label>
+                    <input type="text" id="player-name" placeholder="예: 스나이퍼 현우" maxlength="10"
+                           class="w-full px-4 py-3 rounded-xl bg-slate-950 border-2 border-slate-700 text-white font-bold text-lg focus:outline-none focus:border-emerald-400 font-mono-code">
+                </div>
+                <div class="bg-slate-900/90 p-5 rounded-2xl border border-emerald-500/40">
+                    <label class="block text-sm font-semibold mb-2 text-emerald-300 flex items-center gap-2">
+                        <span>🔑</span> 배틀룸 코드 (방 비밀번호)
+                    </label>
+                    <input type="text" id="room-code" placeholder="예: sniper301" maxlength="12"
+                           class="w-full px-4 py-3 rounded-xl bg-slate-950 border-2 border-slate-700 text-white font-bold text-lg focus:outline-none focus:border-emerald-400 font-mono-code">
+                </div>
+            </div>
+
+            <!-- Team Select Buttons -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                <button onclick="joinTeam('blue')" class="group relative py-5 rounded-2xl font-tactical text-xl bg-gradient-to-r from-teal-800 to-emerald-700 hover:from-teal-700 hover:to-emerald-600 transition-all duration-200 shadow-xl border-2 border-emerald-300 flex items-center justify-center gap-3 transform hover:-translate-y-1 active:scale-95">
+                    <span class="text-3xl">🔵</span>
+                    <span class="tracking-wide">고스트 알파 (블루 저격반) 배치</span>
+                </button>
+                <button onclick="joinTeam('red')" class="group relative py-5 rounded-2xl font-tactical text-xl bg-gradient-to-r from-amber-800 to-rose-700 hover:from-amber-700 hover:to-rose-600 transition-all duration-200 shadow-xl border-2 border-amber-400 flex items-center justify-center gap-3 transform hover:-translate-y-1 active:scale-95">
+                    <span class="text-3xl">🔴</span>
+                    <span class="tracking-wide">팬텀 브라보 (레드 저격반) 배치</span>
+                </button>
+            </div>
+
+            <!-- Lobby Reset Button -->
+            <div class="flex justify-center mb-4">
+                <button onclick="resetCurrentRoomData()" class="px-4 py-2 bg-rose-950/90 hover:bg-rose-900 border border-rose-500/70 rounded-xl text-xs text-rose-300 font-bold transition flex items-center gap-2 shadow font-mono-code">
+                    <span>🧹</span><span>로비 저격반 명단 초기화 (유령 정리)</span>
+                </button>
+            </div>
+
+            <div id="lobby-status" class="text-center text-sm text-emerald-300 font-bold min-h-[24px]">
+                저격반을 선택하면 고배율 광학 조준경을 동기화하고 작전 구역으로 진입합니다!
+            </div>
+            
+            <div class="mt-5 text-center text-xs text-teal-300 font-mono-code font-bold">
+                🔥 클라우드 DB 연결 상태: <span id="db-status-badge">확인 중...</span>
+            </div>
+        </div>
+
+        <!-- 2. Battle Screen -->
+        <div id="battle-screen" class="hidden flex flex-col gap-3">
+            
+            <!-- Quick Reset Bar for Ghost Cleanup -->
+            <div class="flex items-center justify-between px-1">
+                <div class="flex items-center gap-2 text-xs font-mono-code text-emerald-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>LIVE_OPERATION // 4-STAGE TRIGONOMETRIC LOCK-ON</span>
+                </div>
+                <button onclick="resetCurrentRoomData()" class="px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/60 rounded-xl text-xs text-rose-300 font-bold transition active:scale-95 shadow flex items-center gap-1.5 font-mono-code">
+                    <span>🧹</span><span>저격반 명단 리셋 (0명 청소)</span>
+                </button>
+            </div>
+
+            <!-- Enemy Drone HP HUD -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-950/90 p-3.5 rounded-2xl border border-slate-800 shadow-xl hud-corner">
+                <!-- Blue Team Base & Target Drone -->
+                <div class="flex flex-col gap-2 p-3 rounded-xl bg-teal-950/40 border-2 border-emerald-500/60">
+                    <div class="flex justify-between items-center text-sm font-bold">
+                        <span class="text-emerald-300 font-tactical text-base md:text-lg flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]"></span>
+                            <span>알파 기지 요새</span>
+                        </span>
+                        <span id="blue-hp-text" class="text-emerald-300 font-mono-code text-base font-bold">100 / 100 HP</span>
+                    </div>
+                    <div class="w-full bg-slate-900 rounded-full h-3.5 overflow-hidden border border-emerald-500/60 relative">
+                        <div id="blue-hp-bar" class="bg-gradient-to-r from-emerald-600 via-teal-400 to-cyan-300 h-full transition-all duration-300 shadow-[0_0_10px_#10b981]" style="width: 100%;"></div>
+                    </div>
+                    <div id="blue-members" class="text-xs text-emerald-200 font-mono-code truncate">저격반: 대기 중...</div>
+                </div>
+
+                <!-- Red Team Base & Target Drone -->
+                <div class="flex flex-col gap-2 p-3 rounded-xl bg-rose-950/40 border-2 border-rose-500/60">
+                    <div class="flex justify-between items-center text-sm font-bold">
+                        <span class="text-amber-300 font-tactical text-base md:text-lg flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_8px_#f43f5e]"></span>
+                            <span>브라보 기지 요새</span>
+                        </span>
+                        <span id="red-hp-text" class="text-amber-300 font-mono-code text-base font-bold">100 / 100 HP</span>
+                    </div>
+                    <div class="w-full bg-slate-900 rounded-full h-3.5 overflow-hidden border border-rose-500/60 relative">
+                        <div id="red-hp-bar" class="bg-gradient-to-r from-amber-600 via-rose-500 to-red-400 h-full transition-all duration-300 shadow-[0_0_10px_#f59e0b]" style="width: 100%;"></div>
+                    </div>
+                    <div id="red-members" class="text-xs text-rose-200 font-mono-code truncate">저격반: 대기 중...</div>
+                </div>
+            </div>
+
+            <!-- Sniper Scope Optics 2D Canvas Arena -->
+            <div class="relative w-full h-72 md:h-84 bg-slate-950 rounded-3xl border-2 border-emerald-500/60 overflow-hidden shadow-2xl hud-corner">
+                <canvas id="sniper-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+                
+                <div class="absolute top-2 left-3 px-3 py-1 bg-slate-950/90 border border-emerald-400/60 rounded-full text-xs font-mono-code text-emerald-300 z-10 flex items-center gap-2 shadow">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>OPTICS_SCOPE //</span>
+                    <span id="sniper-status-label" class="font-bold text-yellow-300">삼각비 모드 및 조준선 대기</span>
+                </div>
+
+                <div class="absolute top-2 right-3 px-3 py-1 bg-slate-950/90 border border-emerald-400/60 rounded-full text-[11px] font-tactical text-emerald-300 z-10 flex items-center gap-1.5 shadow">
+                    <span>👆 캔버스 터치:</span>
+                    <span class="text-yellow-300">스나이퍼 핑(Ping)</span>
+                </div>
+
+                <!-- Bottom Status Ticker inside Canvas -->
+                <div class="absolute bottom-2 left-3 right-3 px-3 py-1 bg-slate-950/80 border border-slate-800 rounded-xl text-[11px] font-mono-code text-slate-400 flex items-center justify-between">
+                    <span id="canvas-status-stream">> [SYS] 표적 직각삼각형 분석 중... sin·cos·tan 삼각비 판별 요망</span>
+                    <span class="text-emerald-400 font-bold hidden sm:inline">RETICLE: MIL-DOT HIGH OPTIC</span>
+                </div>
+            </div>
+
+            <!-- Cooperative 4-Step Pipeline Workspace -->
+            <div id="action-box" class="relative bg-slate-950/95 neon-border-green rounded-3xl p-4 md:p-6 shadow-2xl flex flex-col items-center text-center scope-pulse hud-corner">
+                
+                <!-- Smoke Blind Screen Overlay -->
+                <div id="smoke-overlay" class="hidden absolute inset-0 rounded-3xl z-30 flex flex-col items-center justify-center p-6 text-center bg-slate-900/95 backdrop-blur-md">
+                    <span class="text-5xl animate-bounce mb-3">💨</span>
+                    <h4 class="text-2xl font-tactical text-amber-400 mb-1">상대 저격반의 전술 연막탄 투척!</h4>
+                    <p class="text-sm text-slate-200 mb-4">조준경 렌즈가 연막으로 뿌옇게 흐려졌습니다! 렌즈 와이퍼를 연속 클릭해 시야를 확보하세요!</p>
+                    <button onclick="cleanSmoke()" class="px-6 py-3 bg-gradient-to-r from-emerald-400 to-teal-300 text-slate-950 font-tactical text-lg rounded-xl shadow-lg active:scale-95">
+                        🧹 렌즈 와이퍼 가동 (<span id="smoke-wipe-count">5</span>회 남음)
+                    </button>
+                </div>
+
+                <!-- 5-Second Overheat Lockout Overlay -->
+                <div id="lockout-penalty-box" class="hidden absolute inset-0 bg-slate-950/95 rounded-3xl z-40 flex flex-col items-center justify-center p-6 text-center border-4 border-rose-500 danger-siren backdrop-blur-md">
+                    <span class="text-5xl animate-bounce mb-2">⚠️</span>
+                    <h4 class="text-2xl font-tactical text-rose-400 mb-1">조준경 영점 왜곡! 긴급 영점 보정 중</h4>
+                    <p class="text-xs md:text-sm text-slate-200 mb-3">
+                        삼각비 모드 또는 특수각 연산 오류! 무작위 찍기를 방지하기 위해 5초간 사격 통제 콘솔이 잠금 처리됩니다.<br>
+                        팀원들과 직각삼각형 빗변/밑변/높이와 특수각 비를 다시 정밀 검산하세요!
+                    </p>
+                    <div class="px-5 py-2.5 rounded-2xl bg-rose-950 border-2 border-rose-400 font-tactical text-2xl text-yellow-300 flex items-center gap-2">
+                        <span>⏳ 영점 보정까지:</span>
+                        <span id="lockout-timer-num" class="text-3xl font-mono text-rose-400">5.0</span>초
+                    </div>
+                </div>
+
+                <!-- Badges -->
+                <div class="flex flex-wrap items-center justify-center gap-2 mb-3">
+                    <span id="my-team-badge" class="text-xs px-3.5 py-1 rounded-full font-bold font-tactical">소속 저격반</span>
+                    <span id="my-role-badge" class="text-xs px-3.5 py-1 bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 rounded-full font-bold">내 포지션</span>
+                    <span id="target-fort-badge" class="text-xs px-3.5 py-1 bg-rose-500/20 text-rose-300 border border-rose-500/40 rounded-full font-bold font-mono-code">
+                        🎯 OPERATION : <span id="current-op-name">SNIPER_MISSION_#1</span>
+                    </span>
+                </div>
+
+                <!-- Right Triangle Telemetry Clue Display -->
+                <div class="w-full max-w-3xl bg-slate-900/90 border-2 border-emerald-400/80 rounded-2xl p-3.5 md:p-5 shadow-inner mb-3 hud-corner">
+                    <div class="text-xs font-semibold text-emerald-300 mb-1.5 tracking-wider uppercase flex items-center justify-between px-2 font-mono-code">
+                        <span>[TACTICAL TELEMETRY // RIGHT TRIANGLE TARGET]</span>
+                        <span class="text-teal-300">STATUS: TARGET_IN_SIGHT</span>
+                    </div>
+                    <div id="triangle-clue-display" class="text-lg md:text-2xl font-tactical text-yellow-300 tracking-wide font-mono-code py-1 leading-relaxed">
+                        표적 직각삼각형 제원 수신 중...
+                    </div>
+                </div>
+
+                <!-- Trigonometry Formula Assembly HUD -->
+                <div class="w-full max-w-2xl bg-slate-900/70 border border-emerald-500/40 rounded-xl p-2.5 mb-3 text-xs font-mono-code">
+                    <div class="text-slate-400 text-[11px] mb-1.5 flex items-center justify-center gap-1">
+                        <span>🧩</span><span>삼각비 조준기 : 삼각비 모드 ➔ 특수각 비 ➔ 목표 변 길이 ➔ 락온!</span>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-center gap-2 text-sm md:text-base font-bold">
+                        <span id="slot-mode" class="px-2.5 py-1 rounded bg-slate-800 border border-slate-600 text-slate-400 font-bold transition-all">
+                            모드 선택 (sin/cos/tan)
+                        </span>
+                        <span class="text-slate-400">➔</span>
+                        <span id="slot-angle" class="px-2.5 py-1 rounded bg-slate-800 border border-slate-600 text-slate-400 font-bold transition-all">
+                            특수각 비율
+                        </span>
+                        <span class="text-slate-400">➔</span>
+                        <div id="slot-length" class="px-2.5 py-1 rounded bg-slate-800 border border-slate-600 text-slate-400 font-bold transition-all">
+                            목표 변(거리/고도) 도출 대기
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Controls -->
+                <div class="w-full max-w-xl flex flex-col items-center gap-2.5">
+                    <div id="step-instruction" class="text-sm md:text-base font-bold text-emerald-200 min-h-[40px] flex items-center justify-center px-2">
+                        단계 안내 로딩 중...
+                    </div>
+
+                    <!-- Step 0: Choose Trig Mode (sin / cos / tan Buttons) -->
+                    <div id="mode-select-control" class="hidden flex items-center justify-center gap-3 w-full max-w-md">
+                        <button onclick="submitModeStep('sin')" class="flex-1 py-3.5 bg-gradient-to-b from-slate-800 to-slate-900 hover:from-emerald-700 hover:to-emerald-800 border-2 border-emerald-400 rounded-xl font-tactical text-xl text-emerald-200 transition active:scale-95 shadow-lg">
+                            sin θ<br><span class="text-[10px] text-slate-400 font-mono-code">(빗변분의 높이)</span>
+                        </button>
+                        <button onclick="submitModeStep('cos')" class="flex-1 py-3.5 bg-gradient-to-b from-slate-800 to-slate-900 hover:from-emerald-700 hover:to-emerald-800 border-2 border-emerald-400 rounded-xl font-tactical text-xl text-emerald-200 transition active:scale-95 shadow-lg">
+                            cos θ<br><span class="text-[10px] text-slate-400 font-mono-code">(빗변분의 밑변)</span>
+                        </button>
+                        <button onclick="submitModeStep('tan')" class="flex-1 py-3.5 bg-gradient-to-b from-slate-800 to-slate-900 hover:from-emerald-700 hover:to-emerald-800 border-2 border-emerald-400 rounded-xl font-tactical text-xl text-emerald-200 transition active:scale-95 shadow-lg">
+                            tan θ<br><span class="text-[10px] text-slate-400 font-mono-code">(밑변분의 높이)</span>
+                        </button>
+                    </div>
+
+                    <!-- Step 1: Choose Special Angle Ratio Buttons (4 choices) -->
+                    <div id="ratio-select-control" class="hidden grid grid-cols-2 gap-2.5 w-full max-w-md">
+                        <button id="ratio-btn-0" onclick="submitRatioStep(0)" class="p-3 bg-slate-900 hover:bg-emerald-950 border-2 border-emerald-400 rounded-xl font-tactical text-lg text-emerald-200 transition active:scale-95 shadow">
+                            비율 A
+                        </button>
+                        <button id="ratio-btn-1" onclick="submitRatioStep(1)" class="p-3 bg-slate-900 hover:bg-emerald-950 border-2 border-emerald-400 rounded-xl font-tactical text-lg text-emerald-200 transition active:scale-95 shadow">
+                            비율 B
+                        </button>
+                        <button id="ratio-btn-2" onclick="submitRatioStep(2)" class="p-3 bg-slate-900 hover:bg-emerald-950 border-2 border-emerald-400 rounded-xl font-tactical text-lg text-emerald-200 transition active:scale-95 shadow">
+                            비율 C
+                        </button>
+                        <button id="ratio-btn-3" onclick="submitRatioStep(3)" class="p-3 bg-slate-900 hover:bg-emerald-950 border-2 border-emerald-400 rounded-xl font-tactical text-lg text-emerald-200 transition active:scale-95 shadow">
+                            비율 D
+                        </button>
+                    </div>
+
+                    <!-- Step 2: Number Input Mode (Distance / Height calculation) -->
+                    <div id="number-input-control" class="hidden flex flex-col sm:flex-row items-center justify-center gap-2 w-full max-w-md">
+                        <input type="number" id="step-number-input" placeholder="계산값 숫자 입력" 
+                               class="w-full sm:w-48 px-4 py-3 rounded-xl bg-slate-900 border-2 border-emerald-400 text-white font-bold text-xl text-center focus:outline-none focus:ring-2 focus:ring-emerald-300 font-mono-code"
+                               onkeydown="if(event.key==='Enter') submitLengthStep()">
+                        <button id="submit-step-btn" onclick="submitLengthStep()" 
+                                class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-tactical text-base md:text-lg rounded-xl transition shadow-lg flex items-center justify-center gap-1.5 active:scale-95">
+                            <span>📡</span><span>길이 제원 입력</span>
+                        </button>
+                    </div>
+
+                    <!-- Step 3 Fire Button (Opens Payload Modal) -->
+                    <div id="fire-payload-control" class="hidden flex flex-col items-center gap-2 w-full max-w-md">
+                        <button onclick="openPayloadModal()" class="w-full py-4 bg-gradient-to-r from-emerald-500 via-teal-600 to-yellow-500 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-tactical text-xl md:text-2xl rounded-2xl shadow-xl border-2 border-white active:scale-95 transition animate-pulse flex items-center justify-center gap-2">
+                            <span>🎯</span><span>초정밀 스나이퍼 격발 (SNIPE! 💥)</span>
+                        </button>
+                        <span class="text-xs text-yellow-200 font-semibold font-mono-code">> 표적 100% 락온 완료! 전술 탄환을 선택하여 적 지휘 드론을 요격하세요!</span>
+                    </div>
+
+                    <!-- Waiting Notice for Team Members -->
+                    <div id="waiting-notice" class="hidden p-3 rounded-xl bg-slate-950/80 border border-slate-700 text-xs md:text-sm text-emerald-200 font-mono-code">
+                        ⏳ 현재 <span id="current-actor-name" class="font-bold text-yellow-300"></span> 저격수가 조준 제원을 계산 중입니다. 캔버스를 터치하여 표적 핑을 보내세요!
+                    </div>
+                </div>
+
+                <!-- 4-Stage Pipeline Tracker Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full max-w-3xl mt-4 pt-3 border-t border-slate-800 text-xs font-semibold font-mono-code">
+                    <div id="stage-card-0" class="p-2.5 rounded-xl border transition-all text-slate-400 bg-slate-900/60 border-slate-800">
+                        ① 삼각비 모드 선별
+                    </div>
+                    <div id="stage-card-1" class="p-2.5 rounded-xl border transition-all text-slate-400 bg-slate-900/60 border-slate-800">
+                        ② 특수각 삼각비
+                    </div>
+                    <div id="stage-card-2" class="p-2.5 rounded-xl border transition-all text-slate-400 bg-slate-900/60 border-slate-800">
+                        ③ 거리/고도 계산
+                    </div>
+                    <div id="stage-card-3" class="p-2.5 rounded-xl border transition-all text-slate-400 bg-slate-900/60 border-slate-800">
+                        ④ 초정밀 저격수 🎯
+                    </div>
+                </div>
+
+                <!-- Feedback & Radio -->
+                <div id="battle-feedback" class="text-sm font-bold min-h-[24px] mt-2 font-mono-code"></div>
+
+                <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
+                    <button onclick="sendQuickCheer('sin=빗변분의높이, cos=빗변분의밑변, tan=밑변분의높이! 📐')" class="px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 rounded-lg text-xs text-emerald-200 font-mono-code">
+                        📐 삼각비 기본 정의 확인!
+                    </button>
+                    <button onclick="sendQuickCheer('sin30°=1/2, cos30°=√3/2, tan45°=1! 💡')" class="px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 rounded-lg text-xs text-emerald-200 font-mono-code">
+                        💡 특수각 삼각비 암기 점검!
+                    </button>
+                    <button onclick="sendQuickCheer('구하려는 변이 분모인지 분자인지 확인해! 🎯')" class="px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 rounded-lg text-xs text-emerald-200 font-mono-code">
+                        🎯 비례식 분모/분자 주의!
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Tactical Sniper Ammo Selection Modal -->
+    <div id="payload-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border-4 border-emerald-400 rounded-3xl p-6 md:p-8 max-w-xl w-full text-center shadow-[0_0_50px_rgba(34,197,94,0.4)] hud-corner">
+            <div class="text-5xl mb-2">🎯</div>
+            <h4 class="text-2xl md:text-3xl font-tactical text-emerald-300 mb-1">4단계: 특수 저격 탄환 선택</h4>
+            <p class="text-xs text-slate-300 mb-5">
+                삼각비 거리·고도 락온 성공! 표적 지휘 드론을 요격할 전술 탄환을 선택하세요!
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                <!-- Weapon 1: Armor Piercing Round -->
+                <button onclick="choosePayload('armor_piercing')" class="group p-4 rounded-2xl bg-gradient-to-b from-rose-950/90 to-slate-950 border-2 border-rose-500 hover:border-yellow-300 flex flex-col items-center gap-2 transition hover:scale-105 active:scale-95 shadow-xl">
+                    <span class="text-4xl">💥</span>
+                    <span class="font-tactical text-base text-rose-300">철갑 저격탄</span>
+                    <span class="text-[11px] text-slate-300 leading-tight">장갑을 관통하는 치명타<br><b class="text-yellow-300">-35 HP 파괴</b></span>
+                </button>
+
+                <!-- Weapon 2: Tactical Smoke Round -->
+                <button onclick="choosePayload('smoke_round')" class="group p-4 rounded-2xl bg-gradient-to-b from-amber-950/90 to-slate-950 border-2 border-amber-500 hover:border-yellow-300 flex flex-col items-center gap-2 transition hover:scale-105 active:scale-95 shadow-xl">
+                    <span class="text-4xl">💨</span>
+                    <span class="font-tactical text-base text-amber-300">전술 연막탄</span>
+                    <span class="text-[11px] text-slate-300 leading-tight">적 조준경 시야 블라인드<br><b class="text-amber-300">-15 HP + 5회 제독</b></span>
+                </button>
+
+                <!-- Weapon 3: Fortress Repair Nanite -->
+                <button onclick="choosePayload('base_repair')" class="group p-4 rounded-2xl bg-gradient-to-b from-emerald-950/90 to-slate-950 border-2 border-emerald-500 hover:border-yellow-300 flex flex-col items-center gap-2 transition hover:scale-105 active:scale-95 shadow-xl">
+                    <span class="text-4xl">🛠️</span>
+                    <span class="font-tactical text-base text-emerald-300">기지 나노 복구</span>
+                    <span class="text-[11px] text-slate-300 leading-tight">아군 요새 기지 수리<br><b class="text-emerald-400">+25 HP 회복</b></span>
+                </button>
+            </div>
+
+            <button onclick="document.getElementById('payload-modal').classList.add('hidden')" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl font-mono-code">
+                닫기
+            </button>
+        </div>
+    </div>
+
+    <!-- Generic Custom Modal -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border-2 border-emerald-400 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl hud-corner">
+            <h4 id="modal-title" class="text-2xl font-tactical text-emerald-300 mb-2">저격 사령부 통신</h4>
+            <p id="modal-body" class="text-sm text-slate-200 mb-6">내용</p>
+            <button onclick="closeCustomModal()" class="bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-950 font-tactical px-6 py-2.5 rounded-xl transition shadow-lg hover:scale-105">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <!-- Victory Modal -->
+    <div id="victory-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl hidden flex items-center justify-center z-50 p-4">
+        <div class="relative bg-gradient-to-b from-slate-900 via-teal-950 to-slate-950 border-4 border-emerald-400 rounded-3xl p-6 md:p-8 max-w-lg w-full text-center shadow-[0_0_60px_rgba(34,197,94,0.6)] overflow-hidden hud-corner">
+            <div class="text-6xl md:text-7xl mb-2">🏆</div>
+            <div class="inline-block px-4 py-1 rounded-full bg-emerald-400 text-slate-950 font-tactical text-xs tracking-wider mb-2">
+                🎯 TRIGO SNIPER GRAND VICTORY
+            </div>
+            <h3 id="victory-team-title" class="text-3xl md:text-4xl font-tactical text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-yellow-300 mb-3">
+                알파 저격반 완승!
+            </h3>
+            <p id="victory-desc" class="text-xs md:text-sm text-emerald-200 mb-5 leading-relaxed">
+                적의 지휘 드론을 완벽한 삼각비 분석과 초정밀 장거리 저격으로 모두 격추했습니다!
+            </p>
+
+            <div class="bg-slate-950/80 border border-slate-700 rounded-2xl p-4 mb-6 text-left">
+                <div class="text-xs text-yellow-300 font-bold mb-2 flex items-center gap-1.5">
+                    <span>👑</span> 영웅 특수저격반 대원
+                </div>
+                <div id="victory-members-list" class="text-sm font-bold text-white mb-3 font-mono-code">
+                    대원 목록
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-center text-xs font-tactical border-t border-slate-800 pt-3">
+                    <div class="bg-slate-900/80 p-2 rounded-xl">
+                        <span class="text-slate-400 block text-[10px]">표적 요격 결과</span>
+                        <span class="text-emerald-300 text-sm">상대 지휘 드론 완파</span>
+                    </div>
+                    <div class="bg-slate-900/80 p-2 rounded-xl">
+                        <span class="text-slate-400 block text-[10px]">작전 수행 타임</span>
+                        <span id="victory-total-time" class="text-yellow-300 text-sm font-mono-code">00.0초</span>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="location.reload()" class="w-full py-4 bg-gradient-to-r from-emerald-400 via-teal-400 to-yellow-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-tactical text-lg rounded-2xl shadow-xl transform active:scale-95 transition">
+                🎯 새로운 삼각비 저격 작전 재도전
+            </button>
+        </div>
+    </div>
+
+    <!-- Web Audio API Sound Synthesizer -->
+    <script>
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) this.ctx = new AudioContext();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playTone(freq, type, duration, gainVal = 0.15) {
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            radarPing() {
+                this.init();
+                this.playTone(880, 'sine', 0.15, 0.2);
+                setTimeout(() => this.playTone(1320, 'sine', 0.25, 0.18), 70);
+            }
+            tacticalPing() {
+                this.init();
+                this.playTone(700, 'sine', 0.15, 0.2);
+                setTimeout(() => this.playTone(1050, 'triangle', 0.25, 0.2), 50);
+            }
+            sniperShot() {
+                this.init();
+                this.playTone(280, 'sawtooth', 0.15, 0.45);
+                setTimeout(() => this.playTone(140, 'sawtooth', 0.35, 0.35), 40);
+                setTimeout(() => this.playTone(80, 'triangle', 0.4, 0.25), 80);
+            }
+            droneExplosion() {
+                this.init();
+                this.playTone(110, 'sawtooth', 0.5, 0.4);
+                setTimeout(() => this.playTone(60, 'triangle', 0.6, 0.35), 60);
+            }
+            unlockChirp() {
+                this.init();
+                this.playTone(523.25, 'triangle', 0.12, 0.2);
+                setTimeout(() => this.playTone(783.99, 'sine', 0.2, 0.25), 70);
+                setTimeout(() => this.playTone(1046.50, 'sine', 0.3, 0.2), 140);
+            }
+            success() {
+                this.init();
+                this.playTone(587.33, 'triangle', 0.15, 0.2);
+                setTimeout(() => this.playTone(880.00, 'triangle', 0.25, 0.25), 90);
+            }
+            error() {
+                this.init();
+                this.playTone(190, 'sawtooth', 0.2, 0.25);
+                setTimeout(() => this.playTone(140, 'sawtooth', 0.25, 0.25), 90);
+            }
+            heal() {
+                this.init();
+                [440, 554.37, 659.25, 880].forEach((f, i) => {
+                    setTimeout(() => this.playTone(f, 'sine', 0.15, 0.2), i * 60);
+                });
+            }
+            victoryFanfare() {
+                this.init();
+                const notes = [
+                    { f: 523.25, d: 0.18 },
+                    { f: 659.25, d: 0.18 },
+                    { f: 783.99, d: 0.22 },
+                    { f: 1046.50, d: 0.5 },
+                    { f: 783.99, d: 0.18 },
+                    { f: 1046.50, d: 0.8 }
+                ];
+                let delay = 0;
+                notes.forEach(n => {
+                    setTimeout(() => this.playTone(n.f, 'triangle', n.d, 0.3), delay);
+                    delay += n.d * 1000 + 40;
+                });
+            }
+        }
+        const sfx = new SoundFX();
+    </script>
+
+    <!-- Main Game Logic and Firebase Synchronizer -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyChxrOzoTxFMy_BvkvNZLXAp1oRvN7Fb1g",
+            authDomain: "focus-tower-defense.firebaseapp.com",
+            projectId: "focus-tower-defense",
+            storageBucket: "focus-tower-defense.firebasestorage.app",
+            messagingSenderId: "519329169002",
+            appId: "1:519329169002:web:401534fe04b6ad39131413",
+            measurementId: "G-G2JRKQ2KXY"
+        };
+
+        let db = null;
+        let useFallback = false;
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            const badge = document.getElementById('db-status-badge');
+            if (badge) {
+                badge.innerText = "🟢 클라우드 DB 정상 연결!";
+                badge.className = "text-emerald-400 font-bold font-mono-code";
+            }
+        } catch (e) {
+            useFallback = false;
+            const badge = document.getElementById('db-status-badge');
+            if (badge) {
+                badge.innerText = "🟢 클라우드 DB 연결 (직접 모드)";
+                badge.className = "text-emerald-400 font-bold font-mono-code";
+            }
+        }
+
+        let currentUserName = '';
+        let currentRoomCode = '';
+        let myTeam = '';
+        let myPlayerId = 'p_' + Math.random().toString(36).substring(2, 9);
+        const myJoinedAt = Date.now();
+        let unsubscribeRoom = null;
+        let lastKnownRoomData = null;
+        let heartbeatInterval = null;
+
+        let missionStartTime = Date.now();
+        let prevWasMyTurn = false;
+        let battleEnded = false;
+        let isLockedOut = false;
+        let lockoutTimerInterval = null;
+        const recentProblemsSet = new Set();
+        let smokeWipesRemaining = 5;
+
+        /*
+           중3 수학 핵심 기하: 삼각비 (30°, 45°, 60°) 생성기
+           - 직각삼각형: 빗변 c, 밑변 b, 높이 h, 각 θ
+           - 1) sin 모드: sin θ = h / c (c와 h 중 하나가 주어지고 다른 하나를 구함)
+           - 2) cos 모드: cos θ = b / c (c와 b 중 하나가 주어지고 다른 하나를 구함)
+           - 3) tan 모드: tan θ = h / b (b와 h 중 하나가 주어지고 다른 하나를 구함)
+           - 학생들이 자연수/정수로 깔끔하게 계산할 수 있도록 수치 배분
+             * 30° sin=1/2, cos=√3/2, tan=√3/3
+             * 45° sin=√2/2, cos=√2/2, tan=1
+             * 60° sin=√3/2, cos=1/2, tan=√3
+        */
+        const RATIO_POOLS = {
+            "sin_30": { label: "1/2", val: 0.5, text: "1/2" },
+            "sin_45": { label: "√2/2", val: 0.707, text: "√2 / 2" },
+            "sin_60": { label: "√3/2", val: 0.866, text: "√3 / 2" },
+            "cos_30": { label: "√3/2", val: 0.866, text: "√3 / 2" },
+            "cos_45": { label: "√2/2", val: 0.707, text: "√2 / 2" },
+            "cos_60": { label: "1/2", val: 0.5, text: "1/2" },
+            "tan_30": { label: "√3/3", val: 0.577, text: "√3 / 3" },
+            "tan_45": { label: "1", val: 1.0, text: "1" },
+            "tan_60": { label: "√3", val: 1.732, text: "√3" }
+        };
+
+        const ALL_RATIO_LABELS = ["1/2", "√2 / 2", "√3 / 2", "1", "√3", "√3 / 3"];
+
+        function generateTrigoMission(opIndex = 1) {
+            let mission = null;
+            let attempts = 0;
+
+            while (attempts < 120) {
+                attempts++;
+                const anglePool = [30, 45, 60];
+                const angle = anglePool[Math.floor(Math.random() * anglePool.length)];
+
+                // Choose mode: sin, cos, or tan
+                let modePool = ['sin', 'cos', 'tan'];
+                if (angle === 45) modePool = ['tan', 'sin', 'cos'];
+                const mode = modePool[Math.floor(Math.random() * modePool.length)];
+
+                const ratioKey = `${mode}_${angle}`;
+                const ratioInfo = RATIO_POOLS[ratioKey];
+
+                let knownSide = '';
+                let targetSide = '';
+                let knownVal = 0;
+                let targetVal = 0;
+                let clue = '';
+
+                // Generate clean integer lengths for calculation
+                if (mode === 'sin') {
+                    if (angle === 30) {
+                        // sin 30° = 1/2. c = 2h.
+                        const h = (Math.floor(Math.random() * 8) + 3) * 5; // 15, 20, 25, 30...
+                        const c = h * 2;
+                        if (Math.random() < 0.5) {
+                            knownSide = '빗변(c)'; knownVal = c;
+                            targetSide = '높이(h)'; targetVal = h;
+                            clue = `표적까지의 [빗변 거리 c = ${c}m], 조준 고각 [θ = 30°] 일 때, 표적의 [높이 h] 를 구하라!`;
+                        } else {
+                            knownSide = '높이(h)'; knownVal = h;
+                            targetSide = '빗변(c)'; targetVal = c;
+                            clue = `표적의 [높이 h = ${h}m], 조준 고각 [θ = 30°] 일 때, 표적까지의 [빗변 비행 거리 c] 를 구하라!`;
+                        }
+                    } else if (angle === 60) {
+                        // sin 60° = √3 / 2. Let c = 20, h = 10√3. Ask for the coefficient of √3 or set clean hypotenuse
+                        const k = Math.floor(Math.random() * 6) + 3; // 3 to 8
+                        const c = k * 2;
+                        const h = k; // "k√3m" 에서 √3 앞의 계수 k
+                        knownSide = '빗변(c)'; knownVal = c;
+                        targetSide = '높이 계수(k)'; targetVal = h;
+                        clue = `[빗변 거리 c = ${c}m], [θ = 60°] 일 때, 표적의 높이 h = k√3 (m) 에서 [계수 k] 의 값을 구하라!`;
+                    } else {
+                        // sin 45° = √2 / 2. c = 10, h = 5√2. Ask for coefficient of √2
+                        const k = Math.floor(Math.random() * 6) + 3;
+                        const c = k * 2;
+                        const h = k;
+                        knownSide = '빗변(c)'; knownVal = c;
+                        targetSide = '높이 계수(k)'; targetVal = h;
+                        clue = `[빗변 거리 c = ${c}m], [θ = 45°] 일 때, 표적의 높이 h = k√2 (m) 에서 [계수 k] 의 값을 구하라!`;
+                    }
+                } else if (mode === 'cos') {
+                    if (angle === 60) {
+                        // cos 60° = 1/2. c = 2b.
+                        const b = (Math.floor(Math.random() * 8) + 3) * 5;
+                        const c = b * 2;
+                        if (Math.random() < 0.5) {
+                            knownSide = '빗변(c)'; knownVal = c;
+                            targetSide = '밑변(b)'; targetVal = b;
+                            clue = `표적까지의 [빗변 거리 c = ${c}m], 조준 고각 [θ = 60°] 일 때, 지면 [밑변 거리 b] 를 구하라!`;
+                        } else {
+                            knownSide = '밑변(b)'; knownVal = b;
+                            targetSide = '빗변(c)'; targetVal = c;
+                            clue = `지면 [밑변 거리 b = ${b}m], 조준 고각 [θ = 60°] 일 때, 표적까지의 [빗변 비행 거리 c] 를 구하라!`;
+                        }
+                    } else if (angle === 30) {
+                        // cos 30° = √3 / 2. c = 2k, b = k√3
+                        const k = Math.floor(Math.random() * 6) + 3;
+                        const c = k * 2;
+                        const b = k;
+                        knownSide = '빗변(c)'; knownVal = c;
+                        targetSide = '밑변 계수(k)'; targetVal = b;
+                        clue = `[빗변 거리 c = ${c}m], [θ = 30°] 일 때, 지면 밑변 거리 b = k√3 (m) 에서 [계수 k] 의 값을 구하라!`;
+                    } else {
+                        // cos 45° = √2 / 2. c = 2k, b = k√2
+                        const k = Math.floor(Math.random() * 6) + 3;
+                        const c = k * 2;
+                        const b = k;
+                        knownSide = '빗변(c)'; knownVal = c;
+                        targetSide = '밑변 계수(k)'; targetVal = b;
+                        clue = `[빗변 거리 c = ${c}m], [θ = 45°] 일 때, 지면 밑변 거리 b = k√2 (m) 에서 [계수 k] 의 값을 구하라!`;
+                    }
+                } else { // tan
+                    if (angle === 45) {
+                        // tan 45° = 1. b = h.
+                        const d = (Math.floor(Math.random() * 12) + 4) * 5; // 20, 25, 30...
+                        if (Math.random() < 0.5) {
+                            knownSide = '밑변(b)'; knownVal = d;
+                            targetSide = '높이(h)'; targetVal = d;
+                            clue = `지면 [밑변 거리 b = ${d}m], 조준 각도 [θ = 45°] 일 때, 표적의 [높이 h] 를 구하라!`;
+                        } else {
+                            knownSide = '높이(h)'; knownVal = d;
+                            targetSide = '밑변(b)'; targetVal = d;
+                            clue = `표적의 [높이 h = ${d}m], 조준 각도 [θ = 45°] 일 때, 지면 [밑변 거리 b] 를 구하라!`;
+                        }
+                    } else if (angle === 60) {
+                        // tan 60° = √3. h = b√3.
+                        const b = Math.floor(Math.random() * 7) + 3;
+                        knownSide = '밑변(b)'; knownVal = b;
+                        targetSide = '높이 계수(k)'; targetVal = b;
+                        clue = `지면 [밑변 b = ${b}m], [θ = 60°] 일 때, 표적 높이 h = k√3 (m) 에서 [계수 k] 의 값을 구하라!`;
+                    } else {
+                        // tan 30° = √3 / 3 = 1 / √3. b = h√3
+                        const h = Math.floor(Math.random() * 7) + 3;
+                        knownSide = '높이(h)'; knownVal = h;
+                        targetSide = '밑변 계수(k)'; targetVal = h;
+                        clue = `표적 [높이 h = ${h}m], [θ = 30°] 일 때, 지면 밑변 b = k√3 (m) 에서 [계수 k] 의 값을 구하라!`;
+                    }
+                }
+
+                // Prepare 4 choices for Step 1
+                const correctRatio = ratioInfo.text;
+                const wrongPool = ALL_RATIO_LABELS.filter(item => item !== correctRatio);
+                // Shuffle wrong choices and take 3
+                for (let i = wrongPool.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [wrongPool[i], wrongPool[j]] = [wrongPool[j], wrongPool[i]];
+                }
+                const choices = [correctRatio, wrongPool[0], wrongPool[1], wrongPool[2]];
+                // Shuffle 4 choices
+                for (let i = choices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [choices[i], choices[j]] = [choices[j], choices[i]];
+                }
+                const correctChoiceIndex = choices.indexOf(correctRatio);
+
+                if (!recentProblemsSet.has(clue) || attempts > 100) {
+                    recentProblemsSet.add(clue);
+                    if (recentProblemsSet.size > 40) {
+                        const first = recentProblemsSet.values().next().value;
+                        recentProblemsSet.delete(first);
+                    }
+
+                    mission = {
+                        angle: angle,
+                        mode: mode, // 'sin' | 'cos' | 'tan'
+                        ratioKey: ratioKey,
+                        correctRatioText: correctRatio,
+                        choices: choices,
+                        correctChoiceIndex: correctChoiceIndex,
+                        knownSide: knownSide,
+                        knownVal: knownVal,
+                        targetSide: targetSide,
+                        targetVal: targetVal,
+                        clue: clue
+                    };
+                    break;
+                }
+            }
+
+            if (!mission) {
+                mission = {
+                    angle: 30,
+                    mode: 'sin',
+                    ratioKey: 'sin_30',
+                    correctRatioText: "1/2",
+                    choices: ["1/2", "√3 / 2", "√2 / 2", "1"],
+                    correctChoiceIndex: 0,
+                    knownSide: '빗변(c)',
+                    knownVal: 40,
+                    targetSide: '높이(h)',
+                    targetVal: 20,
+                    clue: "표적까지의 [빗변 거리 c = 40m], 조준 고각 [θ = 30°] 일 때, 표적의 [높이 h] 를 구하라!"
+                };
+            }
+            return mission;
+        }
+
+        function triggerLockoutPenalty() {
+            if (isLockedOut) return;
+            isLockedOut = true;
+            sfx.error();
+
+            const lockoutBox = document.getElementById('lockout-penalty-box');
+            const timerEl = document.getElementById('lockout-timer-num');
+            lockoutBox.classList.remove('hidden');
+
+            timerEl.innerText = '5.0';
+
+            if (lockoutTimerInterval) clearInterval(lockoutTimerInterval);
+            const startAt = Date.now();
+
+            lockoutTimerInterval = setInterval(() => {
+                const elapsed = Date.now() - startAt;
+                const left = Math.max(0, (5000 - elapsed) / 1000);
+                timerEl.innerText = left.toFixed(1);
+
+                if (left <= 0) {
+                    clearInterval(lockoutTimerInterval);
+                    lockoutTimerInterval = null;
+                    isLockedOut = false;
+                    lockoutBox.classList.add('hidden');
+                    sfx.playTone(520, 'sine', 0.15, 0.2);
+                    showStepFeedback("⚡ [영점 보정 완료] 조준경 사격 콘솔이 정상 복구되었습니다. 신중하게 입력하세요!", false);
+                }
+            }, 100);
+        }
+
+        function cleanMemberList(members = []) {
+            const map = new Map();
+            members.forEach(item => {
+                if (!item) return;
+                const id = item.id || item.name;
+                const name = item.name || item.id || '저격수';
+                const joinedAt = item.joinedAt || Date.now();
+                const lastSeen = item.lastSeen || Date.now();
+                
+                if (!map.has(id)) {
+                    map.set(id, { id, name, joinedAt, lastSeen });
+                }
+            });
+            return Array.from(map.values()).sort((a, b) => 
+                (a.joinedAt || 0) !== (b.joinedAt || 0) ? (a.joinedAt || 0) - (b.joinedAt || 0) : a.name.localeCompare(b.name)
+            );
+        }
+
+        function getStageActorIndex(stage, teamSize, problemCount = 1) {
+            if (teamSize <= 1) return 0;
+            const shift = (Math.max(1, problemCount) - 1) % teamSize;
+            return (stage + shift) % teamSize;
+        }
+
+        function getRoleDescription(memberIndex, teamSize, problemCount = 1) {
+            if (teamSize <= 1) return "올라운드 치프 스나이퍼 (전 구역 단독 조준/저격)";
+            const stageNames = [
+                "① 삼각비 모드 선별관",
+                "② 특수각 탄환 장전사",
+                "③ 거리/고도 계산사",
+                "④ 초정밀 저격수 🎯"
+            ];
+            const myAssignedStages = [];
+            for (let s = 0; s < 4; s++) {
+                if (getStageActorIndex(s, teamSize, problemCount) === memberIndex) {
+                    myAssignedStages.push(stageNames[s]);
+                }
+            }
+            return `${memberIndex + 1}번 저격수 [${myAssignedStages.join(' + ')}]`;
+        }
+
+        function createInitialRoomData() {
+            return {
+                blueHp: 100,
+                redHp: 100,
+                blueMembers: [],
+                redMembers: [],
+                blueStage: 0,
+                redStage: 0,
+                blueProblemCount: 1,
+                redProblemCount: 1,
+                blueMission: generateTrigoMission(1),
+                redMission: generateTrigoMission(1),
+                lastSnipe: null,
+                lastExplosion: null,
+                lastPing: null,
+                smokeTarget: null,
+                smokeId: 0,
+                updatedAt: Date.now()
+            };
+        }
+
+        window.joinTeam = async function(team) {
+            const name = document.getElementById('player-name').value.trim() || `저격수_${Math.floor(Math.random()*900+100)}`;
+            const code = document.getElementById('room-code').value.trim() || 'sniper301';
+
+            currentUserName = name;
+            currentRoomCode = code;
+            myTeam = team;
+
+            const myMemberObj = { id: myPlayerId, name: currentUserName, lastSeen: Date.now(), joinedAt: myJoinedAt };
+
+            document.getElementById('lobby-screen').classList.add('hidden');
+            document.getElementById('battle-screen').classList.remove('hidden');
+            initSniperCanvas();
+            sfx.radarPing();
+
+            let initialData = createInitialRoomData();
+            if (team === 'blue') initialData.blueMembers = [myMemberObj];
+            else initialData.redMembers = [myMemberObj];
+            applyRoomState(initialData);
+
+            try {
+                if (db) {
+                    const roomRef = doc(db, 'trigo_sniper_rooms', currentRoomCode);
+                    startFirestoreListener(roomRef);
+
+                    const snap = await getDoc(roomRef);
+                    let currentData = snap.exists() ? snap.data() : createInitialRoomData();
+                    const listKey = team === 'blue' ? 'blueMembers' : 'redMembers';
+                    let currentList = currentData[listKey] || [];
+                    currentList = currentList.filter(m => (m.id || m.name) !== myPlayerId);
+                    currentList.push(myMemberObj);
+                    currentData[listKey] = cleanMemberList(currentList);
+                    currentData.updatedAt = Date.now();
+
+                    await setDoc(roomRef, currentData, { merge: true });
+                }
+            } catch (err) {
+                console.warn("Trigo sniper join error:", err);
+            }
+
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            heartbeatInterval = setInterval(sendHeartbeat, 3500);
+            window.addEventListener('beforeunload', leaveRoomCleanup);
+        };
+
+        async function sendHeartbeat() {
+            if (!currentRoomCode || !myTeam || !db) return;
+            try {
+                const roomRef = doc(db, 'trigo_sniper_rooms', currentRoomCode);
+                const snap = await getDoc(roomRef);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    const listKey = myTeam === 'blue' ? 'blueMembers' : 'redMembers';
+                    let list = data[listKey] || [];
+                    let found = false;
+                    list = list.map(m => {
+                        if ((m.id || m.name) === myPlayerId) {
+                            found = true;
+                            return { ...m, lastSeen: Date.now() };
+                        }
+                        return m;
+                    });
+                    if (!found) {
+                        list.push({ id: myPlayerId, name: currentUserName, lastSeen: Date.now(), joinedAt: myJoinedAt });
+                    }
+                    data[listKey] = cleanMemberList(list);
+                    data.updatedAt = Date.now();
+                    await updateDoc(roomRef, { [listKey]: data[listKey], updatedAt: data.updatedAt });
+                }
+            } catch (e) {}
+        }
+
+        async function leaveRoomCleanup() {
+            if (!currentRoomCode || !myTeam || !db) return;
+            try {
+                const roomRef = doc(db, 'trigo_sniper_rooms', currentRoomCode);
+                const snap = await getDoc(roomRef);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    const listKey = myTeam === 'blue' ? 'blueMembers' : 'redMembers';
+                    const filtered = (data[listKey] || []).filter(m => (m.id || m.name) !== myPlayerId);
+                    await updateDoc(roomRef, { [listKey]: filtered, updatedAt: Date.now() });
+                }
+            } catch (e) {}
+        }
+
+        window.resetCurrentRoomData = async function() {
+            const code = currentRoomCode || document.getElementById('room-code').value.trim() || 'sniper301';
+            const fresh = createInitialRoomData();
+            const myMemberObj = { id: myPlayerId, name: currentUserName || '저격수', lastSeen: Date.now(), joinedAt: myJoinedAt };
+            if (myTeam === 'blue') fresh.blueMembers = [myMemberObj];
+            else if (myTeam === 'red') fresh.redMembers = [myMemberObj];
+
+            try {
+                if (db) {
+                    const roomRef = doc(db, 'trigo_sniper_rooms', code);
+                    await setDoc(roomRef, fresh);
+                }
+            } catch (e) {}
+            applyRoomState(fresh);
+            showCustomModal("초기화 완료", "저격 배틀룸 대원 명단과 기지 HP가 깨끗하게 리셋되었습니다!");
+        };
+
+        function startFirestoreListener(roomRef) {
+            if (unsubscribeRoom) unsubscribeRoom();
+            unsubscribeRoom = onSnapshot(roomRef, (snap) => {
+                if (!snap.exists()) return;
+                applyRoomState(snap.data());
+            }, (err) => {
+                console.warn("Snapshot error:", err);
+            });
+        }
+
+        function applyRoomState(data) {
+            if (!data) return;
+
+            data.blueMembers = cleanMemberList(data.blueMembers || []);
+            data.redMembers = cleanMemberList(data.redMembers || []);
+            lastKnownRoomData = data;
+
+            if (data.lastSnipe && (!window.lastObservedSnipeId || window.lastObservedSnipeId !== data.lastSnipe.id)) {
+                window.lastObservedSnipeId = data.lastSnipe.id;
+                triggerSniperBullet(data.lastSnipe.fromTeam, data.lastSnipe.mission, data.lastSnipe.payloadType);
+            }
+
+            if (data.lastExplosion && (!window.lastObservedExpId || window.lastObservedExpId !== data.lastExplosion.id)) {
+                window.lastObservedExpId = data.lastExplosion.id;
+                triggerBaseExplosion(data.lastExplosion.victimTeam);
+            }
+
+            if (data.lastPing && (!window.lastObservedPingId || window.lastObservedPingId !== data.lastPing.id)) {
+                window.lastObservedPingId = data.lastPing.id;
+                if (data.lastPing.team === myTeam) {
+                    addTacticalPing(data.lastPing.x, data.lastPing.y, data.lastPing.sender);
+                }
+            }
+
+            if (data.smokeTarget === myTeam && (!window.lastObservedSmokeId || window.lastObservedSmokeId !== data.smokeId)) {
+                window.lastObservedSmokeId = data.smokeId;
+                activateSmokeCover();
+            }
+
+            updateBasesHUD(data.blueHp, data.redHp);
+
+            const bMembers = (data.blueMembers || []).map(m => m.name || m);
+            const rMembers = (data.redMembers || []).map(m => m.name || m);
+            document.getElementById('blue-members').innerText = `저격반(${bMembers.length}명): ${bMembers.join(', ') || '대기 중'}`;
+            document.getElementById('red-members').innerText = `저격반(${rMembers.length}명): ${rMembers.join(', ') || '대기 중'}`;
+
+            updatePipelineUI(data);
+
+            if ((data.blueHp <= 0 || data.redHp <= 0) && !battleEnded) {
+                battleEnded = true;
+                const winnerTeam = data.redHp <= 0 ? 'blue' : 'red';
+                triggerGrandVictory(winnerTeam, data);
+            }
+        }
+
+        async function syncStateUpdate(nextData) {
+            applyRoomState(nextData);
+            if (!useFallback && db) {
+                try {
+                    const roomRef = doc(db, 'trigo_sniper_rooms', currentRoomCode);
+                    await updateDoc(roomRef, nextData);
+                } catch (e) {
+                    useFallback = true;
+                }
+            }
+        }
+
+        function updateBasesHUD(blueHp, redHp) {
+            const bHp = Math.max(0, Math.min(100, blueHp !== undefined ? blueHp : 100));
+            const rHp = Math.max(0, Math.min(100, redHp !== undefined ? redHp : 100));
+
+            document.getElementById('blue-hp-text').innerText = `${bHp} / 100 HP`;
+            document.getElementById('blue-hp-bar').style.width = `${bHp}%`;
+
+            document.getElementById('red-hp-text').innerText = `${rHp} / 100 HP`;
+            document.getElementById('red-hp-bar').style.width = `${rHp}%`;
+        }
+
+        function updatePipelineUI(data) {
+            const team = myTeam;
+            const myRawMembers = team === 'blue' ? (data.blueMembers || []) : (data.redMembers || []);
+            const myMembers = cleanMemberList(myRawMembers);
+            const currentStage = team === 'blue' ? (data.blueStage || 0) : (data.redStage || 0);
+            const currentMission = team === 'blue' ? data.blueMission : data.redMission;
+            const problemCount = team === 'blue' ? (data.blueProblemCount || 1) : (data.redProblemCount || 1);
+
+            if (!currentMission) return;
+
+            document.getElementById('triangle-clue-display').innerText = currentMission.clue;
+            document.getElementById('current-op-name').innerText = `SNIPER_MISSION_#${problemCount}`;
+
+            // Update Trigonometry Assembly HUD Slots
+            const slotMode = document.getElementById('slot-mode');
+            const slotAngle = document.getElementById('slot-angle');
+            const slotLength = document.getElementById('slot-length');
+
+            // Stage 0: Mode selection
+            if (currentStage >= 1) {
+                slotMode.innerHTML = `<span class="text-emerald-300 font-bold">${currentMission.mode.toUpperCase()} 모드 확정</span>`;
+                slotMode.className = "px-2.5 py-1 rounded bg-emerald-950/80 border border-emerald-400 text-emerald-300 font-bold shadow-[0_0_8px_#10b981]";
+            } else {
+                slotMode.innerText = "모드 선택 (sin/cos/tan)";
+                slotMode.className = "px-2.5 py-1 rounded bg-slate-800 border border-slate-600 text-slate-400 font-bold";
+            }
+
+            // Stage 1: Angle ratio selection
+            if (currentStage >= 2) {
+                slotAngle.innerHTML = `<span class="text-yellow-300 font-bold">${currentMission.mode}(${currentMission.angle}°) = ${currentMission.correctRatioText}</span>`;
+                slotAngle.className = "px-2.5 py-1 rounded bg-amber-950/80 border border-yellow-400 text-yellow-300 font-bold shadow-[0_0_8px_#eab308]";
+            } else {
+                slotAngle.innerText = "특수각 비율";
+                slotAngle.className = "px-2.5 py-1 rounded bg-slate-800 border border-slate-600 text-slate-400 font-bold";
+            }
+
+            // Stage 2: Target side length
+            if (currentStage >= 3) {
+                slotLength.innerHTML = `<span class="text-teal-300 font-bold">${currentMission.targetSide} = ${currentMission.targetVal} (완전 락온!)</span>`;
+                slotLength.className = "px-2.5 py-1 rounded bg-teal-950 border-2 border-teal-400 text-teal-300 font-bold shadow-[0_0_12px_#14b8a6] animate-pulse";
+            } else {
+                slotLength.innerText = "목표 변(거리/고도) 도출 대기";
+                slotLength.className = "px-2.5 py-1 rounded bg-slate-800 border border-slate-600 text-slate-400 font-bold";
+            }
+
+            const teamBadge = document.getElementById('my-team-badge');
+            if (team === 'blue') {
+                teamBadge.innerText = `🔵 GHOST BLUE [MISSION #${problemCount}]`;
+                teamBadge.className = 'text-xs px-3.5 py-1 bg-emerald-500/25 text-emerald-300 border border-emerald-400 rounded-full font-bold font-tactical';
+            } else {
+                teamBadge.innerText = `🔴 PHANTOM RED [MISSION #${problemCount}]`;
+                teamBadge.className = 'text-xs px-3.5 py-1 bg-rose-500/25 text-rose-300 border border-rose-400 rounded-full font-bold font-tactical';
+            }
+
+            const teamSize = Math.max(1, myMembers.length);
+            const myIndex = myMembers.findIndex(m => m.id === myPlayerId || m.name === currentUserName);
+            const activeMemberIndex = getStageActorIndex(currentStage, teamSize, problemCount);
+            const activeMemberObj = myMembers[activeMemberIndex];
+            const activeMemberName = activeMemberObj ? activeMemberObj.name : `${activeMemberIndex + 1}번 저격수`;
+
+            const isMyTurn = (myIndex !== -1) && (myIndex === activeMemberIndex);
+
+            if (isMyTurn && !prevWasMyTurn) {
+                sfx.radarPing();
+            }
+            prevWasMyTurn = isMyTurn;
+
+            const roleBadge = document.getElementById('my-role-badge');
+            if (myIndex !== -1) {
+                roleBadge.innerText = `내 포지션: ${getRoleDescription(myIndex, teamSize, problemCount)}`;
+                roleBadge.className = isMyTurn 
+                    ? 'text-xs px-3.5 py-1 bg-yellow-400 text-slate-950 border-2 border-yellow-300 rounded-full font-tactical font-bold animate-pulse'
+                    : 'text-xs px-3.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-full font-bold font-mono-code';
+            } else {
+                roleBadge.innerText = "사령부 관전 중";
+            }
+
+            const instEl = document.getElementById('step-instruction');
+            const modeControl = document.getElementById('mode-select-control');
+            const ratioControl = document.getElementById('ratio-select-control');
+            const numControl = document.getElementById('number-input-control');
+            const fireControl = document.getElementById('fire-payload-control');
+            const waitingNotice = document.getElementById('waiting-notice');
+            const currentActorEl = document.getElementById('current-actor-name');
+            const stepNumInput = document.getElementById('step-number-input');
+
+            if (currentStage === 0) {
+                instEl.innerText = `【1단계: 삼각비 모드 선별】 주어진 조건(${currentMission.knownSide})과 구할 값(${currentMission.targetSide})을 보고 올바른 삼각비(sin, cos, tan)를 선택하세요!`;
+            } else if (currentStage === 1) {
+                instEl.innerText = `【2단계: 특수각 비율 장전】 조준 고각 [θ = ${currentMission.angle}°] 에 해당하는 [${currentMission.mode}(${currentMission.angle}°)] 삼각비 값을 선택하세요!`;
+            } else if (currentStage === 2) {
+                instEl.innerText = `【3단계: 거리/고도 계산】 삼각비 공식을 세워 표적의 [${currentMission.targetSide}] 계산값(숫자)을 입력하세요!`;
+            } else if (currentStage === 3) {
+                instEl.innerText = "【4단계: 초정밀 저격】 십자선 완전 고정 완료! 전술 탄환을 선택하여 적 지휘 드론을 요격하세요!";
+            }
+
+            if (isMyTurn) {
+                waitingNotice.classList.add('hidden');
+                if (currentStage === 0) {
+                    ratioControl.classList.add('hidden');
+                    numControl.classList.add('hidden');
+                    fireControl.classList.add('hidden');
+                    modeControl.classList.remove('hidden');
+                } else if (currentStage === 1) {
+                    modeControl.classList.add('hidden');
+                    numControl.classList.add('hidden');
+                    fireControl.classList.add('hidden');
+                    ratioControl.classList.remove('hidden');
+                    // Setup ratio choices
+                    currentMission.choices.forEach((choiceText, idx) => {
+                        const btn = document.getElementById(`ratio-btn-${idx}`);
+                        if (btn) btn.innerText = choiceText;
+                    });
+                } else if (currentStage === 2) {
+                    modeControl.classList.add('hidden');
+                    ratioControl.classList.add('hidden');
+                    fireControl.classList.add('hidden');
+                    numControl.classList.remove('hidden');
+                    stepNumInput.disabled = false;
+                    stepNumInput.value = '';
+                    stepNumInput.placeholder = `${currentMission.targetSide} 숫자 입력`;
+                    stepNumInput.focus();
+                } else {
+                    modeControl.classList.add('hidden');
+                    ratioControl.classList.add('hidden');
+                    numControl.classList.add('hidden');
+                    fireControl.classList.remove('hidden');
+                }
+            } else {
+                modeControl.classList.add('hidden');
+                ratioControl.classList.add('hidden');
+                numControl.classList.add('hidden');
+                fireControl.classList.add('hidden');
+                waitingNotice.classList.remove('hidden');
+                currentActorEl.innerText = `${activeMemberName} (${activeMemberIndex + 1}번 저격수)`;
+            }
+
+            const stageTitles = [
+                "① 삼각비 모드 선별",
+                "② 특수각 삼각비",
+                "③ 거리/고도 계산",
+                "④ 초정밀 저격 🎯"
+            ];
+
+            for (let s = 0; s < 4; s++) {
+                const card = document.getElementById(`stage-card-${s}`);
+                const stageActorIdx = getStageActorIndex(s, teamSize, problemCount);
+                const stageActorObj = myMembers[stageActorIdx];
+                const stageActorName = stageActorObj ? stageActorObj.name : `${stageActorIdx + 1}번 주자`;
+                const isThisMine = (myIndex === stageActorIdx);
+
+                card.innerHTML = `<div class="font-bold text-xs">${stageTitles[s]}</div>
+                                  <div class="text-[11px] mt-1 ${isThisMine ? 'text-yellow-300 font-bold' : 'text-slate-400'}">담당: ${stageActorName}${isThisMine ? ' (나)' : ''}</div>`;
+
+                if (s === currentStage) {
+                    card.className = "p-2.5 rounded-xl border-2 transition-all bg-yellow-400/20 border-yellow-300 text-yellow-300 font-bold animate-pulse shadow-lg";
+                } else if (s < currentStage) {
+                    card.className = "p-2.5 rounded-xl border transition-all bg-emerald-950/60 border-emerald-500/60 text-emerald-300 font-semibold";
+                } else {
+                    card.className = "p-2.5 rounded-xl border transition-all bg-slate-900/60 border-slate-800 text-slate-500";
+                }
+            }
+        }
+
+        window.submitModeStep = async function(chosenMode) {
+            if (isLockedOut) return;
+            if (!lastKnownRoomData) return;
+            const data = lastKnownRoomData;
+            const currentStage = myTeam === 'blue' ? (data.blueStage || 0) : (data.redStage || 0);
+            const mission = myTeam === 'blue' ? data.blueMission : data.redMission;
+
+            if (currentStage !== 0) return;
+
+            if (chosenMode === mission.mode) {
+                sfx.unlockChirp();
+                const nextData = { ...data };
+                if (myTeam === 'blue') nextData.blueStage = 1;
+                else nextData.redStage = 1;
+
+                showStepFeedback(`✨ [${chosenMode.toUpperCase()} 모드 확정!] 주어진 변과 목표 변의 관계를 완벽히 파악했습니다! 2번 대원 특수각 비율 장전 개시!`, false);
+                nextData.updatedAt = Date.now();
+                await syncStateUpdate(nextData);
+            } else {
+                showStepFeedback(`❌ 삼각비 모드 판정 오류! (${mission.knownSide}와 ${mission.targetSide}의 관계를 다시 확인하세요. 5초 영점 보정)`, true);
+                triggerLockoutPenalty();
+            }
+        };
+
+        window.submitRatioStep = async function(choiceIdx) {
+            if (isLockedOut) return;
+            if (!lastKnownRoomData) return;
+            const data = lastKnownRoomData;
+            const currentStage = myTeam === 'blue' ? (data.blueStage || 0) : (data.redStage || 0);
+            const mission = myTeam === 'blue' ? data.blueMission : data.redMission;
+
+            if (currentStage !== 1) return;
+
+            if (choiceIdx === mission.correctChoiceIndex) {
+                sfx.unlockChirp();
+                const nextData = { ...data };
+                if (myTeam === 'blue') nextData.blueStage = 2;
+                else nextData.redStage = 2;
+
+                showStepFeedback(`✨ [특수각 비율 ${mission.correctRatioText} 장전 완료!] 조준경에 비례선 투영! 3번 대원 목표 변 수치 산출 개시!`, false);
+                nextData.updatedAt = Date.now();
+                await syncStateUpdate(nextData);
+            } else {
+                showStepFeedback(`❌ 특수각 삼각비 오류! ${mission.mode}(${mission.angle}°) 값을 다시 확인하세요! (5초 영점 보정)`, true);
+                triggerLockoutPenalty();
+            }
+        };
+
+        window.submitLengthStep = async function() {
+            if (isLockedOut) return;
+            if (!lastKnownRoomData) return;
+            const inputEl = document.getElementById('step-number-input');
+            const val = parseFloat(inputEl.value.trim());
+
+            if (isNaN(val)) {
+                showStepFeedback("숫자를 입력해 주세요!", true);
+                sfx.error();
+                return;
+            }
+
+            const data = lastKnownRoomData;
+            const currentStage = myTeam === 'blue' ? (data.blueStage || 0) : (data.redStage || 0);
+            const mission = myTeam === 'blue' ? data.blueMission : data.redMission;
+
+            if (currentStage !== 2) return;
+
+            if (val === mission.targetVal) {
+                sfx.unlockChirp();
+                const nextData = { ...data };
+                if (myTeam === 'blue') nextData.blueStage = 3;
+                else nextData.redStage = 3;
+
+                showStepFeedback(`🎯 [${mission.targetSide} = ${val} 산출 완료!] 크로스헤어가 표적에 완전 락온되었습니다! 4번 대원 저격탄을 발사하세요!`, false);
+                nextData.updatedAt = Date.now();
+                await syncStateUpdate(nextData);
+            } else {
+                showStepFeedback("❌ 길이 연산 오류! 비례식 사칙연산과 계수를 다시 확인하세요. (5초 영점 보정)", true);
+                triggerLockoutPenalty();
+            }
+        };
+
+        window.openPayloadModal = function() {
+            document.getElementById('payload-modal').classList.remove('hidden');
+        };
+
+        window.choosePayload = async function(payloadType) {
+            document.getElementById('payload-modal').classList.add('hidden');
+            if (!lastKnownRoomData) return;
+            const data = lastKnownRoomData;
+            const enemyTeam = myTeam === 'blue' ? 'red' : 'blue';
+            const mission = myTeam === 'blue' ? data.blueMission : data.redMission;
+
+            sfx.sniperShot();
+            const nextData = { ...data };
+
+            nextData.lastSnipe = {
+                fromTeam: myTeam,
+                toTeam: enemyTeam,
+                mission: mission,
+                payloadType: payloadType,
+                id: Date.now()
+            };
+
+            let dmg = 0;
+            let heal = 0;
+
+            if (payloadType === 'armor_piercing') {
+                dmg = 35;
+                showStepFeedback("💥 [철갑 저격탄 격발!] 표적 지휘 드론의 코어를 궤멸시켰습니다! (-35 HP)", false);
+            } else if (payloadType === 'smoke_round') {
+                dmg = 15;
+                nextData.smokeTarget = enemyTeam;
+                nextData.smokeId = Date.now();
+                showStepFeedback("💨 [전술 연막탄 격발!] 적 저격반 조준경 시야를 완전히 차단했습니다! (-15 HP)", false);
+            } else if (payloadType === 'base_repair') {
+                heal = 25;
+                sfx.heal();
+                showStepFeedback("🛠️ [기지 나노 복구!] 아군 요새 장갑을 신속하게 수리했습니다! (+25 HP)", false);
+            }
+
+            setTimeout(async () => {
+                const latest = lastKnownRoomData || nextData;
+                const hitData = { ...latest };
+
+                if (payloadType === 'base_repair') {
+                    if (myTeam === 'blue') hitData.blueHp = Math.min(100, (hitData.blueHp || 100) + heal);
+                    else hitData.redHp = Math.min(100, (hitData.redHp || 100) + heal);
+                } else {
+                    if (enemyTeam === 'red') hitData.redHp = Math.max(0, (hitData.redHp !== undefined ? hitData.redHp : 100) - dmg);
+                    else hitData.blueHp = Math.max(0, (hitData.blueHp !== undefined ? hitData.blueHp : 100) - dmg);
+                    hitData.lastExplosion = { victimTeam: enemyTeam, id: Date.now() };
+                    sfx.droneExplosion();
+                }
+
+                const nextProblemCount = (myTeam === 'blue' ? (hitData.blueProblemCount || 1) : (hitData.redProblemCount || 1)) + 1;
+                const nextMission = generateTrigoMission(nextProblemCount);
+
+                if (myTeam === 'blue') {
+                    hitData.blueStage = 0;
+                    hitData.blueProblemCount = nextProblemCount;
+                    hitData.blueMission = nextMission;
+                } else {
+                    hitData.redStage = 0;
+                    hitData.redProblemCount = nextProblemCount;
+                    hitData.redMission = nextMission;
+                }
+
+                hitData.updatedAt = Date.now();
+                await syncStateUpdate(hitData);
+            }, 1200);
+
+            nextData.updatedAt = Date.now();
+            await syncStateUpdate(nextData);
+        };
+
+        function activateSmokeCover() {
+            smokeWipesRemaining = 5;
+            document.getElementById('smoke-wipe-count').innerText = smokeWipesRemaining;
+            document.getElementById('smoke-overlay').classList.remove('hidden');
+            sfx.error();
+        }
+
+        window.cleanSmoke = function() {
+            smokeWipesRemaining--;
+            document.getElementById('smoke-wipe-count').innerText = smokeWipesRemaining;
+            sfx.playTone(320, 'triangle', 0.1, 0.15);
+            if (smokeWipesRemaining <= 0) {
+                document.getElementById('smoke-overlay').classList.add('hidden');
+                sfx.success();
+            }
+        };
+
+        function showStepFeedback(text, isError) {
+            const el = document.getElementById('battle-feedback');
+            el.innerText = text;
+            el.className = isError 
+                ? "text-sm font-bold text-rose-400 min-h-[24px] mt-2 animate-pulse" 
+                : "text-sm font-bold text-emerald-400 min-h-[24px] mt-2";
+        }
+
+        window.sendQuickCheer = function(text) {
+            showStepFeedback(`📻 [저격 무전] ${text}`, false);
+            sfx.playTone(550, 'sine', 0.12, 0.2);
+        };
+
+        window.showCustomModal = function(title, msg) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerText = msg;
+            document.getElementById('custom-modal').classList.remove('hidden');
+        };
+
+        window.closeCustomModal = function() {
+            document.getElementById('custom-modal').classList.add('hidden');
+        };
+
+        function triggerGrandVictory(winnerTeam, roomData) {
+            sfx.victoryFanfare();
+            const isBlueWin = winnerTeam === 'blue';
+            const winnerName = isBlueWin ? "🔵 고스트 알파 저격반" : "🔴 팬텀 브라보 저격반";
+            const rawMembers = isBlueWin ? roomData.blueMembers : roomData.redMembers;
+            const members = (rawMembers || []).map(m => m.name || m);
+
+            document.getElementById('victory-team-title').innerText = `${winnerName} 완벽 요격 대승리!`;
+            document.getElementById('victory-members-list').innerText = members.length > 0 ? members.join(', ') : '단독 스나이퍼';
+            document.getElementById('victory-total-time').innerText = `${((Date.now() - missionStartTime) / 1000).toFixed(1)}초`;
+
+            setTimeout(() => {
+                document.getElementById('victory-modal').classList.remove('hidden');
+            }, 1200);
+        }
+
+        // ==========================================
+        // 🚀 SPECTACULAR SNIPER OPTICS 2D CANVAS ENGINE
+        // ==========================================
+        let canvas, ctx;
+        let tacticalPings = [];
+        let sniperProjectiles = [];
+        let explosions = [];
+        let scopeAngle = 0;
+
+        function initSniperCanvas() {
+            canvas = document.getElementById('sniper-canvas');
+            ctx = canvas.getContext('2d');
+            resizeSniperCanvas();
+            window.addEventListener('resize', resizeSniperCanvas);
+
+            canvas.addEventListener('click', handleCanvasPing);
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches && e.touches[0]) {
+                    const touch = e.touches[0];
+                    const rect = canvas.getBoundingClientRect();
+                    triggerPingFromCoords(touch.clientX - rect.left, touch.clientY - rect.top);
+                }
+            });
+
+            requestAnimationFrame(renderSniperLoop);
+        }
+
+        function resizeSniperCanvas() {
+            if (!canvas || !canvas.parentElement) return;
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+
+        function handleCanvasPing(e) {
+            const rect = canvas.getBoundingClientRect();
+            triggerPingFromCoords(e.clientX - rect.left, e.clientY - rect.top);
+        }
+
+        function triggerPingFromCoords(cx, cy) {
+            sfx.tacticalPing();
+            addTacticalPing(cx, cy, currentUserName || '저격수');
+
+            if (lastKnownRoomData) {
+                const pingData = { ...lastKnownRoomData };
+                pingData.lastPing = {
+                    team: myTeam,
+                    x: Math.round(cx),
+                    y: Math.round(cy),
+                    sender: currentUserName || '저격수',
+                    id: Date.now() + Math.random()
+                };
+                syncStateUpdate(pingData);
+            }
+        }
+
+        function addTacticalPing(x, y, sender) {
+            tacticalPings.push({
+                x: x,
+                y: y,
+                sender: sender,
+                radius: 6,
+                maxRadius: 40,
+                alpha: 1
+            });
+        }
+
+        function triggerSniperBullet(fromTeam, mission, payloadType) {
+            sniperProjectiles.push({
+                fromTeam: fromTeam,
+                mission: mission,
+                payloadType: payloadType,
+                progress: 0
+            });
+        }
+
+        function triggerBaseExplosion(victimTeam) {
+            const targetX = victimTeam === 'red' ? (canvas.width - 85) : 85;
+            const targetY = canvas.height * 0.45;
+
+            for (let i = 0; i < 50; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 7 + 2;
+                explosions.push({
+                    x: targetX,
+                    y: targetY,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    radius: Math.random() * 4 + 2,
+                    color: victimTeam === 'red' ? '#fb7185' : '#34d399',
+                    alpha: 1
+                });
+            }
+        }
+
+        function renderSniperLoop() {
+            if (!ctx || !canvas) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const w = canvas.width;
+            const h = canvas.height;
+            const midX = w / 2;
+            const midY = h / 2;
+
+            // 1. Night-Vision Tactical Grid Background
+            ctx.fillStyle = '#020d08';
+            ctx.fillRect(0, 0, w, h);
+
+            // Circular Optics Mask Vignette
+            const scopeRadius = Math.min(w, h) * 0.46;
+            ctx.strokeStyle = 'rgba(34, 197, 94, 0.12)';
+            ctx.lineWidth = 1;
+
+            // Grid lines inside scope
+            for (let x = 0; x < w; x += 36) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+            }
+            for (let y = 0; y < h; y += 36) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+
+            // Outer Scope Lens Ring
+            ctx.save();
+            ctx.strokeStyle = '#15803d';
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = '#22c55e';
+            ctx.beginPath();
+            ctx.arc(midX, midY, scopeRadius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Inner Mil-Dot Range Ring
+            ctx.strokeStyle = 'rgba(74, 222, 128, 0.3)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([8, 6]);
+            ctx.beginPath();
+            ctx.arc(midX, midY, scopeRadius * 0.65, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+
+            // 2. Mil-Dot Crosshairs (Center Reticle)
+            ctx.strokeStyle = 'rgba(74, 222, 128, 0.55)';
+            ctx.lineWidth = 1.5;
+
+            // Horizontal crosshair
+            ctx.beginPath();
+            ctx.moveTo(midX - scopeRadius, midY);
+            ctx.lineTo(midX + scopeRadius, midY);
+            ctx.stroke();
+
+            // Vertical crosshair
+            ctx.beginPath();
+            ctx.moveTo(midX, midY - scopeRadius);
+            ctx.lineTo(midX, midY + scopeRadius);
+            ctx.stroke();
+
+            // Mil-dots on crosshairs
+            ctx.fillStyle = '#4ade80';
+            for (let d = -4; d <= 4; d++) {
+                if (d === 0) continue;
+                ctx.beginPath();
+                ctx.arc(midX + d * 30, midY, 2, 0, Math.PI * 2);
+                ctx.arc(midX, midY + d * 30, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 3. Draw Active Team Trigonometric Right Triangle Guide
+            if (lastKnownRoomData) {
+                const data = lastKnownRoomData;
+                const mission = myTeam === 'blue' ? data.blueMission : data.redMission;
+                const currentStage = myTeam === 'blue' ? (data.blueStage || 0) : (data.redStage || 0);
+                drawActiveTriangleTelemetry(midX, midY, mission, currentStage);
+            }
+
+            // 4. Draw Command Drones at left and right
+            const blueHp = lastKnownRoomData ? lastKnownRoomData.blueHp : 100;
+            const redHp = lastKnownRoomData ? lastKnownRoomData.redHp : 100;
+            drawCommandDrone(85, h * 0.45, 'blue', blueHp);
+            drawCommandDrone(w - 85, h * 0.45, 'red', redHp);
+
+            // 5. Bullet Tracers (High-Velocity Sniper Shot)
+            for (let i = sniperProjectiles.length - 1; i >= 0; i--) {
+                const b = sniperProjectiles[i];
+                b.progress += 0.055;
+
+                const isBlue = b.fromTeam === 'blue';
+                const startX = isBlue ? 85 : (w - 85);
+                const endX = isBlue ? (w - 85) : 85;
+                const curX = startX + (endX - startX) * b.progress;
+                const curY = h * 0.45;
+
+                ctx.save();
+                const bulletColor = b.payloadType === 'smoke_round' ? '#f59e0b' : (b.payloadType === 'base_repair' ? '#34d399' : '#fb7185');
+                ctx.strokeStyle = bulletColor;
+                ctx.lineWidth = 4;
+                ctx.shadowBlur = 18;
+                ctx.shadowColor = bulletColor;
+                ctx.beginPath();
+                ctx.moveTo(startX, curY);
+                ctx.lineTo(curX, curY);
+                ctx.stroke();
+
+                // Bullet Tip
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(curX, curY, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                if (b.progress >= 1) sniperProjectiles.splice(i, 1);
+            }
+
+            // 6. Tactical Pings
+            for (let i = tacticalPings.length - 1; i >= 0; i--) {
+                const p = tacticalPings[i];
+                p.radius += 0.9;
+                p.alpha -= 0.025;
+
+                ctx.save();
+                ctx.strokeStyle = `rgba(250, 204, 21, ${p.alpha})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.fillStyle = `rgba(254, 240, 138, ${p.alpha})`;
+                ctx.font = 'bold 11px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`📍 ${p.sender}`, p.x, p.y - p.radius - 4);
+                ctx.restore();
+
+                if (p.alpha <= 0) tacticalPings.splice(i, 1);
+            }
+
+            // 7. Explosion Particles
+            for (let i = explosions.length - 1; i >= 0; i--) {
+                const exp = explosions[i];
+                exp.x += exp.vx;
+                exp.y += exp.vy;
+                exp.alpha -= 0.032;
+
+                ctx.save();
+                ctx.globalAlpha = exp.alpha;
+                ctx.fillStyle = exp.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = exp.color;
+                ctx.beginPath();
+                ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                if (exp.alpha <= 0) explosions.splice(i, 1);
+            }
+
+            requestAnimationFrame(renderSniperLoop);
+        }
+
+        // Draw live right triangle projection on the reticle
+        function drawActiveTriangleTelemetry(cx, cy, mission, currentStage) {
+            if (!mission) return;
+            const triWidth = 140;
+            // tan(angle) determines height
+            const rad = (mission.angle * Math.PI) / 180;
+            const triHeight = Math.min(100, Math.max(50, triWidth * Math.tan(rad) * 0.7));
+
+            const originX = cx - triWidth / 2;
+            const originY = cy + triHeight / 2;
+            const rightAngleX = originX + triWidth;
+            const rightAngleY = originY;
+            const apexX = rightAngleX;
+            const apexY = originY - triHeight;
+
+            ctx.save();
+
+            // Stage 0: Draw Base Triangle Lines & Right Angle Symbol
+            ctx.strokeStyle = currentStage >= 1 ? '#34d399' : 'rgba(52, 211, 153, 0.4)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+
+            // Hypotenuse (c)
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(apexX, apexY);
+            ctx.stroke();
+
+            // Base (b)
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(rightAngleX, rightAngleY);
+            ctx.stroke();
+
+            // Height (h)
+            ctx.beginPath();
+            ctx.moveTo(rightAngleX, rightAngleY);
+            ctx.lineTo(apexX, apexY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Right Angle Square Symbol at (rightAngleX, rightAngleY)
+            ctx.strokeStyle = '#4ade80';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(rightAngleX - 12, rightAngleY - 12, 12, 12);
+
+            // Angle arc at origin
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(originX, originY, 24, 0, -rad, true);
+            ctx.stroke();
+
+            ctx.font = 'bold 12px "JetBrains Mono", monospace';
+            ctx.fillStyle = '#fef08a';
+            ctx.fillText(`θ = ${mission.angle}°`, originX + 28, originY - 8);
+
+            // Stage 1: Highlight the Active Trigonometric Mode Sides
+            if (currentStage >= 1) {
+                ctx.strokeStyle = '#facc15';
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#facc15';
+
+                if (mission.mode === 'sin') {
+                    // Highlight c and h
+                    ctx.beginPath();
+                    ctx.moveTo(originX, originY);
+                    ctx.lineTo(apexX, apexY);
+                    ctx.lineTo(rightAngleX, rightAngleY);
+                    ctx.stroke();
+                } else if (mission.mode === 'cos') {
+                    // Highlight c and b
+                    ctx.beginPath();
+                    ctx.moveTo(apexX, apexY);
+                    ctx.lineTo(originX, originY);
+                    ctx.lineTo(rightAngleX, rightAngleY);
+                    ctx.stroke();
+                } else { // tan
+                    // Highlight b and h
+                    ctx.beginPath();
+                    ctx.moveTo(originX, originY);
+                    ctx.lineTo(rightAngleX, rightAngleY);
+                    ctx.lineTo(apexX, apexY);
+                    ctx.stroke();
+                }
+            }
+
+            // Stage 2: Display Dimension Values
+            ctx.font = 'bold 11px "JetBrains Mono", monospace';
+            ctx.fillStyle = '#a7f3d0';
+            // Base label
+            ctx.fillText(`밑변(b)`, originX + triWidth / 2 - 18, originY + 16);
+            // Height label
+            ctx.fillText(`높이(h)`, apexX + 8, originY - triHeight / 2);
+            // Hypotenuse label
+            ctx.fillText(`빗변(c)`, originX + triWidth / 4 - 24, originY - triHeight / 2);
+
+            // Stage 3: Target Lock Reticle at Apex (Enemy Target)
+            if (currentStage >= 3) {
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2.5;
+                ctx.shadowBlur = 14;
+                ctx.shadowColor = '#ef4444';
+
+                ctx.beginPath();
+                ctx.arc(apexX, apexY, 16, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(apexX - 22, apexY);
+                ctx.lineTo(apexX + 22, apexY);
+                ctx.moveTo(apexX, apexY - 22);
+                ctx.lineTo(apexX, apexY + 22);
+                ctx.stroke();
+
+                ctx.fillStyle = '#fca5a5';
+                ctx.fillText(`LOCK-ON!`, apexX - 26, apexY - 24);
+            }
+
+            ctx.restore();
+        }
+
+        function drawCommandDrone(x, y, team, hp) {
+            const isBlue = team === 'blue';
+            const color = isBlue ? '#34d399' : '#fb7185';
+            const name = isBlue ? '알파 기지' : '브라보 기지';
+
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Drone Hover Wobble
+            const hoverY = Math.sin(Date.now() / 300) * 4;
+            ctx.translate(0, hoverY);
+
+            // Drone Main Body
+            ctx.fillStyle = '#091512';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2.5;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = color;
+            ctx.beginPath();
+            ctx.roundRect ? ctx.roundRect(-24, -14, 48, 28, 8) : ctx.rect(-24, -14, 48, 28);
+            ctx.fill();
+            ctx.stroke();
+
+            // Drone Rotors (4 Arms)
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-24, -10); ctx.lineTo(-36, -20);
+            ctx.moveTo(24, -10); ctx.lineTo(36, -20);
+            ctx.moveTo(-24, 10); ctx.lineTo(-36, 20);
+            ctx.moveTo(24, 10); ctx.lineTo(36, 20);
+            ctx.stroke();
+
+            // Spinning Rotor Blades
+            ctx.strokeStyle = color;
+            const bladeSpin = (Date.now() / 60) % Math.PI;
+            [-36, 36].forEach(rx => {
+                [-20, 20].forEach(ry => {
+                    ctx.save();
+                    ctx.translate(rx, ry);
+                    ctx.rotate(bladeSpin);
+                    ctx.beginPath();
+                    ctx.moveTo(-10, 0); ctx.lineTo(10, 0);
+                    ctx.stroke();
+                    ctx.restore();
+                });
+            });
+
+            // Status Indicator LED
+            ctx.fillStyle = isBlue ? '#34d399' : '#ef4444';
+            ctx.beginPath();
+            ctx.arc(0, 0, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // HP Label
+            ctx.font = 'bold 11px "JetBrains Mono", monospace';
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.fillText(`${name} [${hp}%]`, 0, -32);
+
+            ctx.restore();
+        }
+    </script>
+</body>
+</html>
