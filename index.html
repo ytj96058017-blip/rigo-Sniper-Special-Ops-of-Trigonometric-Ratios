@@ -605,7 +605,8 @@
         const myJoinedAt = Date.now();
         let unsubscribeRoom = null;
         let lastKnownRoomData = null;
-        let heartbeatInterval = null;
+        let bc = null;
+        let lastPingSentTime = 0;
 
         let missionStartTime = Date.now();
         let prevWasMyTurn = false;
@@ -914,6 +915,20 @@
 
             const myMemberObj = { id: myPlayerId, name: currentUserName, lastSeen: Date.now(), joinedAt: myJoinedAt };
 
+            try {
+                if (window.BroadcastChannel) {
+                    if (bc) bc.close();
+                    bc = new BroadcastChannel(`trigo_sniper_${currentRoomCode}`);
+                    bc.onmessage = (event) => {
+                        const msg = event.data;
+                        if (!msg) return;
+                        if (msg.type === 'LOCAL_PING' && msg.team === myTeam) {
+                            addTacticalPing(msg.x, msg.y, msg.sender);
+                        }
+                    };
+                }
+            } catch (e) {}
+
             document.getElementById('lobby-screen').classList.add('hidden');
             document.getElementById('battle-screen').classList.remove('hidden');
             initSniperCanvas();
@@ -944,37 +959,8 @@
                 console.warn("Trigo sniper join error:", err);
             }
 
-            if (heartbeatInterval) clearInterval(heartbeatInterval);
-            heartbeatInterval = setInterval(sendHeartbeat, 3500);
             window.addEventListener('beforeunload', leaveRoomCleanup);
         };
-
-        async function sendHeartbeat() {
-            if (!currentRoomCode || !myTeam || !db) return;
-            try {
-                const roomRef = doc(db, 'trigo_sniper_rooms', currentRoomCode);
-                const snap = await getDoc(roomRef);
-                if (snap.exists()) {
-                    const data = snap.data();
-                    const listKey = myTeam === 'blue' ? 'blueMembers' : 'redMembers';
-                    let list = data[listKey] || [];
-                    let found = false;
-                    list = list.map(m => {
-                        if ((m.id || m.name) === myPlayerId) {
-                            found = true;
-                            return { ...m, lastSeen: Date.now() };
-                        }
-                        return m;
-                    });
-                    if (!found) {
-                        list.push({ id: myPlayerId, name: currentUserName, lastSeen: Date.now(), joinedAt: myJoinedAt });
-                    }
-                    data[listKey] = cleanMemberList(list);
-                    data.updatedAt = Date.now();
-                    await updateDoc(roomRef, { [listKey]: data[listKey], updatedAt: data.updatedAt });
-                }
-            } catch (e) {}
-        }
 
         async function leaveRoomCleanup() {
             if (!currentRoomCode || !myTeam || !db) return;
@@ -1531,7 +1517,15 @@
             sfx.tacticalPing();
             addTacticalPing(cx, cy, currentUserName || '저격수');
 
-            if (lastKnownRoomData) {
+            if (bc) {
+                try {
+                    bc.postMessage({ type: 'LOCAL_PING', team: myTeam, x: Math.round(cx), y: Math.round(cy), sender: currentUserName || '저격수' });
+                } catch (e) {}
+            }
+
+            const now = Date.now();
+            if (now - lastPingSentTime > 2500 && lastKnownRoomData) {
+                lastPingSentTime = now;
                 const pingData = { ...lastKnownRoomData };
                 pingData.lastPing = {
                     team: myTeam,
