@@ -81,7 +81,7 @@
         </div>
         <div class="flex items-center gap-3">
             <span class="text-yellow-300 font-bold">SPECIAL_ANGLES: 30° / 45° / 60°</span>
-            <span class="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/50 text-emerald-300">MIL-DOT HIGH OPTIC</span>
+            <span class="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/50 text-emerald-300">CLOUD_SECURE</span>
         </div>
     </div>
 
@@ -153,7 +153,7 @@
 
             <!-- Lobby Reset Button -->
             <div class="flex justify-center mb-4">
-                <button onclick="resetCurrentRoomData()" class="px-4 py-2 bg-rose-950/90 hover:bg-rose-900 border border-rose-500/70 rounded-xl text-xs text-rose-300 font-bold transition flex items-center gap-2 shadow font-mono-code">
+                <button onclick="resetCurrentRoomData()" class="px-4 py-2 bg-rose-950/90 hover:bg-rose-900 border border-rose-500/70 rounded-xl text-xs text-rose-300 font-bold transition flex items-center gap-2 shadow font-mono-code active:scale-95">
                     <span>🧹</span><span>로비 저격반 명단 초기화 (유령 정리)</span>
                 </button>
             </div>
@@ -163,7 +163,7 @@
             </div>
             
             <div class="mt-5 text-center text-xs text-teal-300 font-mono-code font-bold">
-                🔥 클라우드 DB 연결 상태: <span id="db-status-badge">확인 중...</span>
+                🔥 클라우드 DB 연결 상태: <span id="db-status-badge">인증 및 연결 준비 중...</span>
             </div>
         </div>
 
@@ -332,7 +332,7 @@
                                 <div id="spec-blue-actor" class="text-[11px] text-emerald-200 font-mono-code truncate">주자: 대기 중</div>
                             </div>
                             <div class="p-2.5 rounded-xl bg-rose-950/60 border border-rose-500/50">
-                                <div class="text-xs text-emerald-300 font-bold font-tactical mb-1 flex items-center justify-between">
+                                <div class="text-xs text-rose-300 font-bold font-tactical mb-1 flex items-center justify-between">
                                     <span>🔴 팬텀 브라보 (레드)</span>
                                     <span id="spec-red-target" class="text-[10px] text-yellow-300 font-mono-code">표적 #1</span>
                                 </div>
@@ -383,7 +383,6 @@
                     </div>
 
                     <!-- Step 3 Fire Button (Opens Payload Modal) -->
-                    <!-- ★ [연타 방지 가드 1] id="fire-action-btn" 추가 -->
                     <div id="fire-payload-control" class="hidden flex flex-col items-center gap-2 w-full max-w-md">
                         <button id="fire-action-btn" onclick="openPayloadModal()" class="w-full py-4 bg-gradient-to-r from-emerald-500 via-teal-600 to-yellow-500 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-tactical text-xl md:text-2xl rounded-2xl shadow-xl border-2 border-white active:scale-95 transition animate-pulse flex items-center justify-center gap-2">
                             <span>🎯</span><span>호흡 정지 & 초정밀 저격 (SNIPE! 💥)</span>
@@ -608,40 +607,68 @@
         const sfx = new SoundFX();
     </script>
 
-    <!-- Main Game Logic and Firebase Synchronizer -->
+    <!-- Main Game Logic and Firebase Synchronizer with Full Auth & Strict Path -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyChxrOzoTxFMy_BvkvNZLXAp1oRvN7Fb1g",
-            authDomain: "focus-tower-defense.firebaseapp.com",
-            projectId: "focus-tower-defense",
-            storageBucket: "focus-tower-defense.firebasestorage.app",
-            messagingSenderId: "519329169002",
-            appId: "1:519329169002:web:401534fe04b6ad39131413",
-            measurementId: "G-G2JRKQ2KXY"
-        };
+        // Global environment variables with robust fallback
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'trigo-sniper-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined'
+            ? JSON.parse(__firebase_config)
+            : {
+                apiKey: "AIzaSyChxrOzoTxFMy_BvkvNZLXAp1oRvN7Fb1g",
+                authDomain: "focus-tower-defense.firebaseapp.com",
+                projectId: "focus-tower-defense",
+                storageBucket: "focus-tower-defense.firebasestorage.app",
+                messagingSenderId: "519329169002",
+                appId: "1:519329169002:web:401534fe04b6ad39131413",
+                measurementId: "G-G2JRKQ2KXY"
+            };
 
         let db = null;
-        let useFallback = false;
+        let auth = null;
+        let currentUser = null;
+        let isAuthReady = false;
 
         try {
             const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
             db = getFirestore(app);
-            const badge = document.getElementById('db-status-badge');
-            if (badge) {
-                badge.innerText = "🟢 클라우드 DB 정상 연결!";
-                badge.className = "text-emerald-400 font-bold font-mono-code";
-            }
         } catch (e) {
-            useFallback = false;
-            const badge = document.getElementById('db-status-badge');
-            if (badge) {
-                badge.innerText = "🟢 클라우드 DB 연결 (직접 모드)";
-                badge.className = "text-emerald-400 font-bold font-mono-code";
-            }
+            console.error("Firebase init error:", e);
         }
+
+        // Complete Authentication FIRST before any query (Mandatory Rule 3)
+        const authReadyPromise = (async () => {
+            if (!auth) return null;
+            try {
+                let cred = null;
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    cred = await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    cred = await signInAnonymously(auth);
+                }
+                currentUser = cred.user;
+                isAuthReady = true;
+
+                const badge = document.getElementById('db-status-badge');
+                if (badge) {
+                    badge.innerText = `🟢 클라우드 통신망 정상 연결 (${currentUser.uid.substring(0, 6)}...)`;
+                    badge.className = "text-emerald-400 font-bold font-mono-code";
+                }
+                return currentUser;
+            } catch (err) {
+                console.warn("Auth initial error:", err);
+                const badge = document.getElementById('db-status-badge');
+                if (badge) {
+                    badge.innerText = "🟡 로컬 직통 연결 모드 활성";
+                    badge.className = "text-amber-300 font-bold font-mono-code";
+                }
+                return null;
+            }
+        })();
 
         let currentUserName = '';
         let currentRoomCode = '';
@@ -660,19 +687,18 @@
         let lockoutTimerInterval = null;
         const recentProblemsSet = new Set();
         let smokeWipesRemaining = 5;
-
-        // ★ [연타 방지 가드 플래그] 4단계 탄환 발사 중복 클릭 방지
         let isActionProcessing = false;
+        let lastRenderedStage = -1;
+        let lastRenderedTarget = -1;
+
+        // Strict Path Generator (Rule 1)
+        function getRoomDocRef(roomCode) {
+            if (!db) return null;
+            return doc(db, 'artifacts', appId, 'public', 'data', 'trigo_sniper_rooms', roomCode);
+        }
 
         /*
            7대 전술 표적 명단 정의
-           1: 해안 통신탑 (Comm Tower)
-           2: 공중 정찰 드론 (Scout Drone)
-           3: 레이더 관측 돔 (Radar Dome)
-           4: 해안 경비 초계정 (Patrol Boat)
-           5: 대공 미사일 포대 (SAM Battery)
-           6: 기동 강습 헬기 (Assault Heli)
-           7: 지휘관 중장갑 건쉽 (Command Gunship - Final Boss)
         */
         const TARGET_CONFIGS = [
             { index: 1, name: "해안 감시 통신탑", icon: "🗼", type: "tower" },
@@ -898,7 +924,7 @@
             const map = new Map();
             members.forEach(item => {
                 if (!item) return;
-                const id = item.id || item.name;
+                const id = item.id || (item.name + '_' + (item.joinedAt || Math.random()));
                 const name = item.name || item.id || '저격수';
                 const joinedAt = item.joinedAt || Date.now();
                 const lastSeen = item.lastSeen || Date.now();
@@ -954,8 +980,10 @@
         }
 
         window.joinTeam = async function(team) {
-            const name = document.getElementById('player-name').value.trim() || `저격수_${Math.floor(Math.random()*900+100)}`;
-            const code = document.getElementById('room-code').value.trim() || 'sniper301';
+            const nameInput = document.getElementById('player-name');
+            const codeInput = document.getElementById('room-code');
+            const name = (nameInput ? nameInput.value.trim() : '') || `저격수_${Math.floor(Math.random()*900+100)}`;
+            const code = (codeInput ? codeInput.value.trim() : '') || 'sniper301';
 
             currentUserName = name;
             currentRoomCode = code;
@@ -971,8 +999,10 @@
                     bc.onmessage = (event) => {
                         const msg = event.data;
                         if (!msg) return;
-                        if (msg.type === 'LOCAL_PING' && msg.team === myTeam) {
-                            addTacticalPing(msg.x, msg.y, msg.sender);
+                        if (msg.type === 'LOCAL_PING') {
+                            if (myTeam === 'spectator' || msg.team === myTeam) {
+                                addTacticalPing(msg.x, msg.y, msg.sender);
+                            }
                         } else if (msg.type === 'SYNC_STATE' && msg.payload) {
                             applyRoomState(msg.payload);
                         }
@@ -985,17 +1015,18 @@
             initSniperCanvas();
             sfx.radarPing();
 
-            let initialData = createInitialRoomData();
-            if (team === 'blue') initialData.blueMembers = [myMemberObj];
-            else initialData.redMembers = [myMemberObj];
-            applyRoomState(initialData);
+            let localData = createInitialRoomData();
+            if (team === 'blue') localData.blueMembers = [myMemberObj];
+            else localData.redMembers = [myMemberObj];
+            applyRoomState(localData);
 
+            await authReadyPromise;
             try {
-                if (db) {
-                    const roomRef = doc(db, 'trigo_sniper_rooms', currentRoomCode);
-                    startFirestoreListener(roomRef);
+                const roomDoc = getRoomDocRef(currentRoomCode);
+                if (roomDoc) {
+                    startFirestoreListener(roomDoc);
 
-                    const snap = await getDoc(roomRef);
+                    const snap = await getDoc(roomDoc);
                     let currentData = snap.exists() ? snap.data() : createInitialRoomData();
                     const listKey = team === 'blue' ? 'blueMembers' : 'redMembers';
                     let currentList = currentData[listKey] || [];
@@ -1004,16 +1035,22 @@
                     currentData[listKey] = cleanMemberList(currentList);
                     currentData.updatedAt = Date.now();
 
-                    await setDoc(roomRef, currentData, { merge: true });
+                    applyRoomState(currentData);
+                    await setDoc(roomDoc, currentData, { merge: true });
+
+                    if (bc) {
+                        try {
+                            bc.postMessage({ type: 'SYNC_STATE', payload: currentData });
+                        } catch (e) {}
+                    }
                 }
             } catch (err) {
-                console.warn("Trigo sniper join error:", err);
+                console.error("Trigo sniper join error:", err);
             }
 
             window.addEventListener('beforeunload', leaveRoomCleanup);
         };
 
-        // Teacher Spectator / Broadcaster Entry Function
         window.joinSpectator = async function() {
             const codeInput = document.getElementById('room-code');
             const code = (codeInput ? codeInput.value.trim() : '') || 'sniper301';
@@ -1044,11 +1081,12 @@
             initSniperCanvas();
             sfx.victoryFanfare();
 
+            await authReadyPromise;
             try {
-                if (db) {
-                    const roomRef = doc(db, 'trigo_sniper_rooms', currentRoomCode);
-                    startFirestoreListener(roomRef);
-                    const snap = await getDoc(roomRef);
+                const roomDoc = getRoomDocRef(currentRoomCode);
+                if (roomDoc) {
+                    startFirestoreListener(roomDoc);
+                    const snap = await getDoc(roomDoc);
                     if (snap.exists()) {
                         applyRoomState(snap.data());
                     } else {
@@ -1061,15 +1099,16 @@
         };
 
         async function leaveRoomCleanup() {
-            if (!currentRoomCode || !myTeam || !db) return;
+            if (!currentRoomCode || !myTeam || myTeam === 'spectator' || !db) return;
             try {
-                const roomRef = doc(db, 'trigo_sniper_rooms', currentRoomCode);
-                const snap = await getDoc(roomRef);
+                const roomDoc = getRoomDocRef(currentRoomCode);
+                if (!roomDoc) return;
+                const snap = await getDoc(roomDoc);
                 if (snap.exists()) {
                     const data = snap.data();
                     const listKey = myTeam === 'blue' ? 'blueMembers' : 'redMembers';
                     const filtered = (data[listKey] || []).filter(m => (m.id || m.name) !== myPlayerId);
-                    await updateDoc(roomRef, { [listKey]: filtered, updatedAt: Date.now() });
+                    await updateDoc(roomDoc, { [listKey]: filtered, updatedAt: Date.now() });
                 }
             } catch (e) {}
         }
@@ -1081,19 +1120,25 @@
             if (myTeam === 'blue') fresh.blueMembers = [myMemberObj];
             else if (myTeam === 'red') fresh.redMembers = [myMemberObj];
 
+            await authReadyPromise;
             try {
-                if (db) {
-                    const roomRef = doc(db, 'trigo_sniper_rooms', code);
-                    await setDoc(roomRef, fresh);
+                const roomDoc = getRoomDocRef(code);
+                if (roomDoc) {
+                    await setDoc(roomDoc, fresh);
                 }
             } catch (e) {}
             applyRoomState(fresh);
+            if (bc) {
+                try {
+                    bc.postMessage({ type: 'SYNC_STATE', payload: fresh });
+                } catch (e) {}
+            }
             showCustomModal("초기화 완료", "7대 표적 요격 작전 대원 명단과 스코어가 깨끗하게 리셋되었습니다!");
         };
 
-        function startFirestoreListener(roomRef) {
+        function startFirestoreListener(roomDocRef) {
             if (unsubscribeRoom) unsubscribeRoom();
-            unsubscribeRoom = onSnapshot(roomRef, (snap) => {
+            unsubscribeRoom = onSnapshot(roomDocRef, (snap) => {
                 if (!snap.exists()) return;
                 applyRoomState(snap.data());
             }, (err) => {
@@ -1107,7 +1152,7 @@
             data.blueMembers = cleanMemberList(data.blueMembers || []);
             data.redMembers = cleanMemberList(data.redMembers || []);
 
-            // 기존/신규 미션 객체의 표적 제원(undefined 방지) 안전 보정
+            // Safe target metadata fallback
             ['blueMission', 'redMission'].forEach(mKey => {
                 if (data[mKey]) {
                     const kills = mKey === 'blueMission' ? (data.blueKills || 0) : (data.redKills || 0);
@@ -1143,8 +1188,10 @@
 
             const bMembers = (data.blueMembers || []).map(m => m.name || m);
             const rMembers = (data.redMembers || []).map(m => m.name || m);
-            document.getElementById('blue-members').innerText = `저격반(${bMembers.length}명): ${bMembers.join(', ') || '대기 중'}`;
-            document.getElementById('red-members').innerText = `저격반(${rMembers.length}명): ${rMembers.join(', ') || '대기 중'}`;
+            const bMemEl = document.getElementById('blue-members');
+            const rMemEl = document.getElementById('red-members');
+            if (bMemEl) bMemEl.innerText = `저격반(${bMembers.length}명): ${bMembers.join(', ') || '대기 중'}`;
+            if (rMemEl) rMemEl.innerText = `저격반(${rMembers.length}명): ${rMembers.join(', ') || '대기 중'}`;
 
             updatePipelineUI(data);
 
@@ -1163,13 +1210,13 @@
                     bc.postMessage({ type: 'SYNC_STATE', payload: nextData });
                 } catch (e) {}
             }
-            if (!useFallback && db) {
-                try {
-                    const roomRef = doc(db, 'trigo_sniper_rooms', currentRoomCode);
-                    await updateDoc(roomRef, nextData);
-                } catch (e) {
-                    useFallback = true;
+            try {
+                const roomDoc = getRoomDocRef(currentRoomCode);
+                if (roomDoc) {
+                    await updateDoc(roomDoc, nextData);
                 }
+            } catch (e) {
+                console.warn("Update sync warning:", e);
             }
         }
 
@@ -1340,7 +1387,7 @@
                 teamBadge.className = 'text-xs px-3.5 py-1 bg-emerald-500/25 text-emerald-300 border border-emerald-400 rounded-full font-bold font-tactical';
             } else {
                 teamBadge.innerText = `🔴 PHANTOM RED [표적 #${targetNum}/7]`;
-                teamBadge.className = 'text-xs px-3.5 py-1 bg-rose-500/25 text-rose-300 border border-rose-500/40 rounded-full font-bold font-tactical';
+                teamBadge.className = 'text-xs px-3.5 py-1 bg-rose-500/25 text-rose-300 border border-rose-400 rounded-full font-bold font-tactical';
             }
 
             const teamSize = Math.max(1, myMembers.length);
@@ -1391,6 +1438,7 @@
 
             if (isMyTurn) {
                 waitingNotice.classList.add('hidden');
+                isActionProcessing = false;
                 if (currentStage === 0) {
                     ratioControl.classList.add('hidden');
                     numControl.classList.add('hidden');
@@ -1421,6 +1469,11 @@
                     ratioControl.classList.add('hidden');
                     numControl.classList.add('hidden');
                     fireControl.classList.remove('hidden');
+                    const fireActionBtn = document.getElementById('fire-action-btn');
+                    if (fireActionBtn) {
+                        fireActionBtn.disabled = false;
+                        fireActionBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
                 }
             } else {
                 modeControl.classList.add('hidden');
@@ -1458,7 +1511,7 @@
             }
         }
 
-        window.submitModeStep = async function(chosenMode) {
+        window.submitModeStep = async function() {
             if (isLockedOut) return;
             if (!lastKnownRoomData) return;
             const data = lastKnownRoomData;
@@ -1467,13 +1520,13 @@
 
             if (currentStage !== 0) return;
 
-            if (chosenMode === mission.mode) {
+            if (arguments[0] === mission.mode) {
                 sfx.unlockChirp();
                 const nextData = { ...data };
                 if (myTeam === 'blue') nextData.blueStage = 1;
                 else nextData.redStage = 1;
 
-                showStepFeedback(`✨ [${chosenMode.toUpperCase()} 모드 확정!] 주어진 변과 목표 변의 관계를 완벽히 파악했습니다! 2번 대원 특수각 비율 장전 개시!`, false);
+                showStepFeedback(`✨ [${arguments[0].toUpperCase()} 모드 확정!] 주어진 변과 목표 변의 관계를 완벽히 파악했습니다! 2번 대원 특수각 비율 장전 개시!`, false);
                 nextData.updatedAt = Date.now();
                 await syncStateUpdate(nextData);
             } else {
@@ -1541,14 +1594,11 @@
         };
 
         window.openPayloadModal = function() {
-            // ★ [연타 방지 가드 1] 이미 처리 중이면 모달 오픈 차단
             if (isActionProcessing) return;
-            document.getElementById('payload-modal').classList.add('hidden'); // clear state if needed
             document.getElementById('payload-modal').classList.remove('hidden');
         };
 
         window.choosePayload = async function(payloadType) {
-            // ★ [연타 방지 가드 2] 즉시 잠금 설정 및 버튼 비활성화
             if (isActionProcessing) return;
             isActionProcessing = true;
 
@@ -1888,7 +1938,7 @@
 
             ctx.beginPath();
             ctx.moveTo(midX, midY - scopeRadius);
-            ctx.lineTo(midX, midY + scopeRadius);
+            ctx.lineTo(midX + scopeRadius, midY);
             ctx.stroke();
 
             ctx.fillStyle = '#4ade80';
@@ -1996,7 +2046,6 @@
             const tIndex = mission.targetIndex || 1;
             const cfg = TARGET_CONFIGS[(tIndex - 1) % TARGET_CONFIGS.length] || TARGET_CONFIGS[0];
             const targetName = mission.targetName || cfg.name;
-            const targetIcon = mission.targetIcon || cfg.icon;
             const targetType = mission.targetType || cfg.type;
 
             const time = Date.now();
