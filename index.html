@@ -9,7 +9,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@500;700;800&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Jua', 'Inter', sans-serif; }
+        body { 
+            font-family: 'Jua', 'Inter', sans-serif; 
+            color: #f8fafc;
+            background-color: #010805;
+            margin: 0;
+            padding: 0;
+        }
+        .hidden { display: none !important; }
         .font-tactical { font-family: 'Orbitron', 'Black Han Sans', sans-serif; }
         .font-mono-code { font-family: 'JetBrains Mono', monospace; }
         
@@ -133,6 +140,14 @@
                 <button onclick="joinTeam('red')" class="group relative py-5 rounded-2xl font-tactical text-xl bg-gradient-to-r from-amber-800 to-rose-700 hover:from-amber-700 hover:to-rose-600 transition-all duration-200 shadow-xl border-2 border-amber-400 flex items-center justify-center gap-3 transform hover:-translate-y-1 active:scale-95">
                     <span class="text-3xl">🔴</span>
                     <span class="tracking-wide">팬텀 브라보 (레드 저격반) 배치</span>
+                </button>
+            </div>
+
+            <!-- Teacher Spectator Mode Button -->
+            <div class="mb-5">
+                <button onclick="joinSpectator()" class="w-full py-4 rounded-2xl font-tactical text-lg md:text-xl bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 hover:from-purple-900 hover:to-indigo-900 transition-all duration-200 shadow-2xl border-2 border-purple-400 text-purple-200 flex items-center justify-center gap-3 transform hover:-translate-y-0.5 active:scale-95">
+                    <span class="text-2xl animate-pulse">📺</span>
+                    <span class="tracking-wide font-bold">교사 전용 / 대형 스크린 중계석 입장 (학생 명단 미포함 관전)</span>
                 </button>
             </div>
 
@@ -296,6 +311,553 @@
                 <div class="w-full max-w-xl flex flex-col items-center gap-2.5">
                     <div id="step-instruction" class="text-sm md:text-base font-bold text-emerald-200 min-h-[40px] flex items-center justify-center px-2">
                         단계 안내 로딩 중...
+                    </div>
+
+                    <!-- Spectator Dual-Team Live Broadcast Panel -->
+                    <div id="spectator-broadcast-panel" class="hidden w-full max-w-2xl bg-gradient-to-r from-slate-900/90 via-purple-950/80 to-slate-900/90 border-2 border-purple-400/80 rounded-2xl p-4 shadow-2xl hud-corner">
+                        <div class="flex items-center justify-between border-b border-purple-500/40 pb-2 mb-3">
+                            <span class="text-xs font-mono-code text-purple-300 font-bold flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+                                <span>ON-AIR // 대형 스크린 실시간 중계석</span>
+                            </span>
+                            <span class="text-[11px] font-tactical text-yellow-300">교사 화면: 학생 턴 미개입</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                            <div class="p-2.5 rounded-xl bg-teal-950/60 border border-emerald-500/50">
+                                <div class="text-xs text-emerald-300 font-bold font-tactical mb-1 flex items-center justify-between">
+                                    <span>🔵 고스트 알파 (블루)</span>
+                                    <span id="spec-blue-target" class="text-[10px] text-yellow-300 font-mono-code">표적 #1</span>
+                                </div>
+                                <div id="spec-blue-stage" class="text-xs font-bold text-white mb-1">1단계: 모드 선별</div>
+                                <div id="spec-blue-actor" class="text-[11px] text-emerald-200 font-mono-code truncate">주자: 대기 중</div>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-rose-950/60 border border-rose-500/50">
+                                <div class="text-xs text-rose-300 font-bold font-tactical mb-1 flex items-center justify-between">
+                                    <span>🔴 팬텀 브라보 (레드)</span>
+                                    <span id="spec-red-target" class="text-[10px] text-yellow-300 font-mono-code">표적 #1</span>
+                                </div>
+                                <div id="spec-red-stage" class="text-xs font-bold text-white mb-1">1단계: 모드 선별</div>
+                                <div id="spec-red-actor" class="text-[11px] text-rose-200 font-mono-code truncate">주자: 대기 중</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 0: Choose Trig Mode (sin / cos / tan Buttons) -->
+                    <div id="mode-select-control" class="hidden flex items-center justify-center gap-3 w-full max-w-md">
+                        <button onclick="submitModeStep('sin')" class="flex-1 py-3.5 bg-gradient-to-b from-slate-800 to-slate-900 hover:from-emerald-700 hover:to-emerald-800 border-2 border-emerald-400 rounded-xl font-tactical text-xl text-emerald-200 transition active:scale-95 shadow-lg">
+                            sin θ<br><span class="text-[10px] text-slate-400 font-mono-code">(빗변분의 높이)</span>
+                        </button>
+                        <button onclick="submitModeStep('cos')" class="flex-1 py-3.5 bg-gradient-to-b from-slate-800 to-slate-900 hover:from-emerald-700 hover:to-emerald-800 border-2 border-emerald-400 rounded-xl font-tactical text-xl text-emerald-200 transition active:scale-95 shadow-lg">
+                            cos θ<br><span class="text-[10px] text-slate-400 font-mono-code">(빗변분의 밑변)</span>
+                        </button>
+                        <button onclick="submitModeStep('tan')" class="flex-1 py-3.5 bg-gradient-to-b from-slate-800 to-slate-900 hover:from-emerald-700 hover:to-emerald-800 border-2 border-emerald-400 rounded-xl font-tactical text-xl text-emerald-200 transition active:scale-95 shadow-lg">
+                            tan θ<br><span class="text-[10px] text-slate-400 font-mono-code">(밑변분의 높이)</span>
+                        </button>
+                    </div>
+
+                    <!-- Step 1: Choose Special Angle Ratio Buttons (4 choices) -->
+                    <div id="ratio-select-control" class="hidden grid grid-cols-2 gap-2.5 w-full max-w-md">
+                        <button id="ratio-btn-0" onclick="submitRatioStep(0)" class="p-3 bg-slate-900 hover:bg-emerald-950 border-2 border-emerald-400 rounded-xl font-tactical text-lg text-emerald-200 transition active:scale-95 shadow">
+                            비율 A
+                        </button>
+                        <button id="ratio-btn-1" onclick="submitRatioStep(1)" class="p-3 bg-slate-900 hover:bg-emerald-950 border-2 border-emerald-400 rounded-xl font-tactical text-lg text-emerald-200 transition active:scale-95 shadow">
+                            비율 B
+                        </button>
+                        <button id="ratio-btn-2" onclick="submitRatioStep(2)" class="p-3 bg-slate-900 hover:bg-emerald-950 border-2 border-emerald-400 rounded-xl font-tactical text-lg text-emerald-200 transition active:scale-95 shadow">
+                            비율 C
+                        </button>
+                        <button id="ratio-btn-3" onclick="submitRatioStep(3)" class="p-3 bg-slate-900 hover:bg-emerald-950 border-2 border-emerald-400 rounded-xl font-tactical text-lg text-emerald-200 transition active:scale-95 shadow">
+                            비율 D
+                        </button>
+                    </div>
+
+                    <!-- Step 2: Number Input Mode (Distance / Height calculation) -->
+                    <div id="number-input-control" class="hidden flex flex-col sm:flex-row items-center justify-center gap-2 w-full max-w-md">
+                        <input type="number" id="step-number-input" placeholder="계산값 숫자 입력" 
+                               class="w-full sm:w-48 px-4 py-3 rounded-xl bg-slate-900 border-2 border-emerald-400 text-white font-bold text-xl text-center focus:outline-none focus:ring-2 focus:ring-emerald-300 font-mono-code"
+                               onkeydown="if(event.key==='Enter') submitLengthStep()">
+                        <button id="submit-step-btn" onclick="submitLengthStep()" 
+                                class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-tactical text-base md:text-lg rounded-xl transition shadow-lg flex items-center justify-center gap-1.5 active:scale-95">
+                            <span>📡</span><span>길이 제원 전송</span>
+                        </button>
+                    </div>
+
+                    <!-- Step 3 Fire Button (Opens Payload Modal) -->
+                    <div id="fire-payload-control" class="hidden flex flex-col items-center gap-2 w-full max-w-md">
+                        <button onclick="openPayloadModal()" class="w-full py-4 bg-gradient-to-r from-emerald-500 via-teal-600 to-yellow-500 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-tactical text-xl md:text-2xl rounded-2xl shadow-xl border-2 border-white active:scale-95 transition animate-pulse flex items-center justify-center gap-2">
+                            <span>🎯</span><span>호흡 정지 & 초정밀 저격 (SNIPE! 💥)</span>
+                        </button>
+                        <span class="text-xs text-yellow-200 font-semibold font-mono-code">> 표적 100% 락온 완료! 전술 탄환을 선택하여 표적을 격파하세요!</span>
+                    </div>
+
+                    <!-- Waiting Notice for Team Members -->
+                    <div id="waiting-notice" class="hidden p-3 rounded-xl bg-slate-950/80 border border-slate-700 text-xs md:text-sm text-emerald-200 font-mono-code">
+                        ⏳ 현재 <span id="current-actor-name" class="font-bold text-yellow-300"></span> 저격수가 조준 제원을 계산 중입니다. 캔버스를 터치하여 표적 레이저 핑을 보내세요!
+                    </div>
+                </div>
+
+                <!-- 4-Stage Pipeline Tracker Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full max-w-3xl mt-4 pt-3 border-t border-slate-800 text-xs font-semibold font-mono-code">
+                    <div id="stage-card-0" class="p-2.5 rounded-xl border transition-all text-slate-400 bg-slate-900/60 border-slate-800">
+                        ① 삼각비 모드 선별
+                    </div>
+                    <div id="stage-card-1" class="p-2.5 rounded-xl border transition-all text-slate-400 bg-slate-900/60 border-slate-800">
+                        ② 특수각 삼각비
+                    </div>
+                    <div id="stage-card-2" class="p-2.5 rounded-xl border transition-all text-slate-400 bg-slate-900/60 border-slate-800">
+                        ③ 거리/고도 계산
+                    </div>
+                    <div id="stage-card-3" class="p-2.5 rounded-xl border transition-all text-slate-400 bg-slate-900/60 border-slate-800">
+                        ④ 초정밀 저격 🎯
+                    </div>
+                </div>
+
+                <!-- Feedback & Radio -->
+                <div id="battle-feedback" class="text-sm font-bold min-h-[24px] mt-2 font-mono-code"></div>
+
+                <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
+                    <button onclick="sendQuickCheer('sin=빗변분의높이, cos=빗변분의밑변, tan=밑변분의높이! 📐')" class="px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 rounded-lg text-xs text-emerald-200 font-mono-code">
+                        📐 삼각비 기본 정의 확인!
+                    </button>
+                    <button onclick="sendQuickCheer('sin30°=1/2, cos30°=√3/2, tan45°=1! 💡')" class="px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 rounded-lg text-xs text-emerald-200 font-mono-code">
+                        💡 특수각 삼각비 암기 점검!
+                    </button>
+                    <button onclick="sendQuickCheer('구하려는 변이 분모인지 분자인지 확인해! 🎯')" class="px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 rounded-lg text-xs text-emerald-200 font-mono-code">
+                        🎯 비례식 분모/분자 주의!
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Tactical Sniper Ammo Selection Modal -->
+    <div id="payload-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border-4 border-emerald-400 rounded-3xl p-6 md:p-8 max-w-xl w-full text-center shadow-[0_0_50px_rgba(34,197,94,0.4)] hud-corner">
+            <div class="text-5xl mb-2">🎯</div>
+            <h4 class="text-2xl md:text-3xl font-tactical text-emerald-300 mb-1">4단계: 특수 저격 탄환 선택</h4>
+            <p class="text-xs text-slate-300 mb-5">
+                삼각비 락온 성공! 표적을 격파할 전술 탄환을 선택하세요!
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                <!-- Weapon 1: Armor Piercing Round -->
+                <button onclick="choosePayload('armor_piercing')" class="group p-4 rounded-2xl bg-gradient-to-b from-rose-950/90 to-slate-950 border-2 border-rose-500 hover:border-yellow-300 flex flex-col items-center gap-2 transition hover:scale-105 active:scale-95 shadow-xl">
+                    <span class="text-4xl">💥</span>
+                    <span class="font-tactical text-base text-rose-300">철갑 저격탄</span>
+                    <span class="text-[11px] text-slate-300 leading-tight">순수 파괴력으로 표적 관통<br><b class="text-yellow-300">표적 즉시 격파 (+1점)</b></span>
+                </button>
+
+                <!-- Weapon 2: Tactical Smoke Round -->
+                <button onclick="choosePayload('smoke_round')" class="group p-4 rounded-2xl bg-gradient-to-b from-amber-950/90 to-slate-950 border-2 border-amber-500 hover:border-yellow-300 flex flex-col items-center gap-2 transition hover:scale-105 active:scale-95 shadow-xl">
+                    <span class="text-4xl">💨</span>
+                    <span class="font-tactical text-base text-amber-300">전술 연막탄</span>
+                    <span class="text-[11px] text-slate-300 leading-tight">적 조준경 렌즈 시야 차단<br><b class="text-amber-300">격파 + 적 5회 제독</b></span>
+                </button>
+
+                <!-- Weapon 3: Flashbang Round -->
+                <button onclick="choosePayload('flash_round')" class="group p-4 rounded-2xl bg-gradient-to-b from-teal-950/90 to-slate-950 border-2 border-teal-400 hover:border-yellow-300 flex flex-col items-center gap-2 transition hover:scale-105 active:scale-95 shadow-xl">
+                    <span class="text-4xl">⚡</span>
+                    <span class="font-tactical text-base text-teal-300">전자기 섬광탄</span>
+                    <span class="text-[11px] text-slate-300 leading-tight">초광속 탄도로 요격<br><b class="text-teal-400">초고속 즉시 타격 (+1점)</b></span>
+                </button>
+            </div>
+
+            <button onclick="document.getElementById('payload-modal').classList.add('hidden')" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl font-mono-code">
+                닫기
+            </button>
+        </div>
+    </div>
+
+    <!-- Generic Custom Modal -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border-2 border-emerald-400 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl hud-corner">
+            <h4 id="modal-title" class="text-2xl font-tactical text-emerald-300 mb-2">저격 사령부 통신</h4>
+            <p id="modal-body" class="text-sm text-slate-200 mb-6">내용</p>
+            <button onclick="closeCustomModal()" class="bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-950 font-tactical px-6 py-2.5 rounded-xl transition shadow-lg hover:scale-105">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <!-- Victory Modal -->
+    <div id="victory-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl hidden flex items-center justify-center z-50 p-4">
+        <div class="relative bg-gradient-to-b from-slate-900 via-teal-950 to-slate-950 border-4 border-emerald-400 rounded-3xl p-6 md:p-8 max-w-lg w-full text-center shadow-[0_0_60px_rgba(34,197,94,0.6)] overflow-hidden hud-corner">
+            <div class="text-6xl md:text-7xl mb-2">🏆</div>
+            <div class="inline-block px-4 py-1 rounded-full bg-emerald-400 text-slate-950 font-tactical text-xs tracking-wider mb-2">
+                🎯 TRIGO SNIPER GRAND VICTORY
+            </div>
+            <h3 id="victory-team-title" class="text-3xl md:text-4xl font-tactical text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-yellow-300 mb-3">
+                알파 저격반 7대 표적 전탄 요격 대승리!
+            </h3>
+            <p id="victory-desc" class="text-xs md:text-sm text-emerald-200 mb-5 leading-relaxed">
+                7개의 핵심 표적을 완벽한 직각삼각형 30°·45°·60° 삼각비 연산으로 상대보다 먼저 모두 격파했습니다!
+            </p>
+
+            <div class="bg-slate-950/80 border border-slate-700 rounded-2xl p-4 mb-6 text-left">
+                <div class="text-xs text-yellow-300 font-bold mb-2 flex items-center gap-1.5">
+                    <span>👑</span> 영웅 특수저격반 대원
+                </div>
+                <div id="victory-members-list" class="text-sm font-bold text-white mb-3 font-mono-code">
+                    대원 목록
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-center text-xs font-tactical border-t border-slate-800 pt-3">
+                    <div class="bg-slate-900/80 p-2 rounded-xl">
+                        <span class="text-slate-400 block text-[10px]">표적 요격 결과</span>
+                        <span class="text-emerald-300 text-sm">7 / 7 전탄 명중</span>
+                    </div>
+                    <div class="bg-slate-900/80 p-2 rounded-xl">
+                        <span class="text-slate-400 block text-[10px]">작전 수행 타임</span>
+                        <span id="victory-total-time" class="text-yellow-300 text-sm font-mono-code">00.0초</span>
+                    </div>
+                </div>
+            </div>
+
+<file:Trigo Sniper Special Ops of Trigonometric Ratios.html:trigo_sniper.html>
+```html:트리고 스나이퍼: 7대 표적 삼각비 요격 레이스:trigo_sniper.html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>트리고 스나이퍼: 7대 표적 삼각비 요격 레이스 - 중3 수학 4인 실시간 배틀</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@500;700;800&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Jua', 'Inter', sans-serif; 
+            color: #f8fafc;
+            background-color: #010805;
+            margin: 0;
+            padding: 0;
+        }
+        .hidden { display: none !important; }
+        .font-tactical { font-family: 'Orbitron', 'Black Han Sans', sans-serif; }
+        .font-mono-code { font-family: 'JetBrains Mono', monospace; }
+        
+        .sniper-grid-bg {
+            background-color: #010805;
+            background-image: 
+                linear-gradient(rgba(34, 197, 94, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34, 197, 94, 0.06) 1px, transparent 1px),
+                radial-gradient(circle at 50% 20%, #032b1f 0%, #02140d 65%, #010805 100%);
+            background-size: 28px 28px, 28px 28px, 100% 100%;
+        }
+
+        .neon-border-green {
+            border: 2px solid #22c55e;
+            box-shadow: 0 0 22px rgba(34, 197, 94, 0.35), inset 0 0 15px rgba(34, 197, 94, 0.15);
+        }
+
+        .hud-corner {
+            position: relative;
+        }
+        .hud-corner::before, .hud-corner::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-color: #4ade80;
+            pointer-events: none;
+        }
+        .hud-corner::before { top: -2px; left: -2px; border-top: 3px solid; border-left: 3px solid; }
+        .hud-corner::after { bottom: -2px; right: -2px; border-bottom: 3px solid; border-right: 3px solid; }
+
+        @keyframes scopeGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.5)); }
+            50% { filter: drop-shadow(0 0 24px rgba(34, 197, 94, 0.9)) drop-shadow(0 0 40px rgba(74, 222, 128, 0.4)); }
+        }
+        .scope-glow {
+            animation: scopeGlow 2.5s infinite ease-in-out;
+        }
+
+        @keyframes dangerAlert {
+            from { border-color: #ef4444; background-color: rgba(239, 68, 68, 0.3); }
+            to { border-color: #f59e0b; background-color: rgba(245, 158, 11, 0.4); }
+        }
+        .danger-siren {
+            animation: dangerAlert 0.75s infinite alternate;
+        }
+
+        .crosshair-text {
+            text-shadow: 0 0 12px rgba(74, 222, 128, 0.8), 2px 2px #065f46;
+        }
+    </style>
+</head>
+<body class="sniper-grid-bg text-white min-h-screen flex flex-col justify-between p-2 md:p-5 select-none relative overflow-x-hidden">
+
+    <!-- Top Tactical Telemetry Bar -->
+    <div class="max-w-6xl w-full mx-auto flex items-center justify-between text-[11px] font-mono-code text-emerald-400 border-b border-emerald-500/30 pb-1.5 mb-2">
+        <div class="flex items-center gap-2">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <span class="font-bold tracking-widest text-emerald-300">SNIPER_OPTICS: 1ST_PERSON_SCOPE</span>
+            <span class="text-slate-600">|</span>
+            <span class="hidden sm:inline text-slate-400">OPERATION: 7_TARGET_RACE</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-yellow-300 font-bold">SPECIAL_ANGLES: 30° / 45° / 60°</span>
+            <span class="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/50 text-emerald-300">MIL-DOT HIGH OPTIC</span>
+        </div>
+    </div>
+
+    <!-- Header Banner -->
+    <header class="text-center mb-3">
+        <div class="flex items-center justify-center gap-3">
+            <span class="text-3xl md:text-4xl">🎯</span>
+            <h1 class="text-3xl md:text-5xl font-tactical tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-yellow-300 crosshair-text font-black">
+                TRIGO SNIPER
+            </h1>
+            <span class="text-3xl md:text-4xl">🔭</span>
+        </div>
+        <p class="text-xs md:text-sm text-emerald-300/90 mt-1 font-mono-code tracking-wide">
+            [중3 삼각비] 직각삼각형 30°·45°·60° 특수각 삼각비 · 7대 전술 표적 실시간 선착순 요격 레이스
+        </p>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="max-w-6xl w-full mx-auto flex-1 flex flex-col justify-center gap-3">
+
+        <!-- 1. Lobby Screen -->
+        <div id="lobby-screen" class="bg-slate-950/90 neon-border-green rounded-3xl p-6 md:p-10 shadow-2xl backdrop-blur-xl hud-corner">
+            <div class="text-center mb-8">
+                <div class="inline-block px-4 py-1 rounded-full bg-emerald-950 border border-emerald-400/50 text-emerald-300 text-xs font-mono-code font-bold mb-2 tracking-widest">
+                    // 7-TARGET TRIGONOMETRIC SNIPER SQUAD //
+                </div>
+                <h2 class="text-2xl md:text-3xl font-tactical text-emerald-300 mb-2">저격 부대원 편제 등록</h2>
+                <p class="text-xs md:text-sm text-slate-300">
+                    배틀룸 코드를 공유한 전우들과 팀을 이뤄 삼각비 공식으로 7개의 핵심 표적을 상대 팀보다 먼저 전탄 요격하세요!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+                <div class="bg-slate-900/90 p-5 rounded-2xl border border-emerald-500/40">
+                    <label class="block text-sm font-semibold mb-2 text-emerald-300 flex items-center gap-2">
+                        <span>👤</span> 저격 특수요원 닉네임
+                    </label>
+                    <input type="text" id="player-name" placeholder="예: 스나이퍼 현우" maxlength="10"
+                           class="w-full px-4 py-3 rounded-xl bg-slate-950 border-2 border-slate-700 text-white font-bold text-lg focus:outline-none focus:border-emerald-400 font-mono-code">
+                </div>
+                <div class="bg-slate-900/90 p-5 rounded-2xl border border-emerald-500/40">
+                    <label class="block text-sm font-semibold mb-2 text-emerald-300 flex items-center gap-2">
+                        <span>🔑</span> 배틀룸 코드 (방 비밀번호)
+                    </label>
+                    <input type="text" id="room-code" placeholder="예: sniper301" maxlength="12"
+                           class="w-full px-4 py-3 rounded-xl bg-slate-950 border-2 border-slate-700 text-white font-bold text-lg focus:outline-none focus:border-emerald-400 font-mono-code">
+                </div>
+            </div>
+
+            <!-- Team Select Buttons -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                <button onclick="joinTeam('blue')" class="group relative py-5 rounded-2xl font-tactical text-xl bg-gradient-to-r from-teal-800 to-emerald-700 hover:from-teal-700 hover:to-emerald-600 transition-all duration-200 shadow-xl border-2 border-emerald-300 flex items-center justify-center gap-3 transform hover:-translate-y-1 active:scale-95">
+                    <span class="text-3xl">🔵</span>
+                    <span class="tracking-wide">고스트 알파 (블루 저격반) 배치</span>
+                </button>
+                <button onclick="joinTeam('red')" class="group relative py-5 rounded-2xl font-tactical text-xl bg-gradient-to-r from-amber-800 to-rose-700 hover:from-amber-700 hover:to-rose-600 transition-all duration-200 shadow-xl border-2 border-amber-400 flex items-center justify-center gap-3 transform hover:-translate-y-1 active:scale-95">
+                    <span class="text-3xl">🔴</span>
+                    <span class="tracking-wide">팬텀 브라보 (레드 저격반) 배치</span>
+                </button>
+            </div>
+
+            <!-- Teacher Spectator Mode Button -->
+            <div class="mb-5">
+                <button onclick="joinSpectator()" class="w-full py-4 rounded-2xl font-tactical text-lg md:text-xl bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 hover:from-purple-900 hover:to-indigo-900 transition-all duration-200 shadow-2xl border-2 border-purple-400 text-purple-200 flex items-center justify-center gap-3 transform hover:-translate-y-0.5 active:scale-95">
+                    <span class="text-2xl animate-pulse">📺</span>
+                    <span class="tracking-wide font-bold">교사 전용 / 대형 스크린 중계석 입장 (학생 명단 미포함 관전)</span>
+                </button>
+            </div>
+
+            <!-- Lobby Reset Button -->
+            <div class="flex justify-center mb-4">
+                <button onclick="resetCurrentRoomData()" class="px-4 py-2 bg-rose-950/90 hover:bg-rose-900 border border-rose-500/70 rounded-xl text-xs text-rose-300 font-bold transition flex items-center gap-2 shadow font-mono-code">
+                    <span>🧹</span><span>로비 저격반 명단 초기화 (유령 정리)</span>
+                </button>
+            </div>
+
+            <div id="lobby-status" class="text-center text-sm text-emerald-300 font-bold min-h-[24px]">
+                저격반을 선택하면 고배율 광학 조준경을 동기화하고 7대 표적 요격 작전 구역으로 진입합니다!
+            </div>
+            
+            <div class="mt-5 text-center text-xs text-teal-300 font-mono-code font-bold">
+                🔥 클라우드 DB 연결 상태: <span id="db-status-badge">확인 중...</span>
+            </div>
+        </div>
+
+        <!-- 2. Battle Screen -->
+        <div id="battle-screen" class="hidden flex flex-col gap-3">
+            
+            <!-- Quick Reset Bar for Ghost Cleanup -->
+            <div class="flex items-center justify-between px-1">
+                <div class="flex items-center gap-2 text-xs font-mono-code text-emerald-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>LIVE_OPERATION // 7-TARGET SNIPER RACE (FIRST TO 7 KILLS WINS)</span>
+                </div>
+                <button onclick="resetCurrentRoomData()" class="px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/60 rounded-xl text-xs text-rose-300 font-bold transition active:scale-95 shadow flex items-center gap-1.5 font-mono-code">
+                    <span>🧹</span><span>저격반 명단 리셋 (0명 청소)</span>
+                </button>
+            </div>
+
+            <!-- 7-Target Race Scoreboard HUD (Blue vs Red) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-950/90 p-3.5 rounded-2xl border border-slate-800 shadow-xl hud-corner">
+                <!-- Blue Team 7-Target Status -->
+                <div class="flex flex-col gap-2 p-3 rounded-xl bg-teal-950/40 border-2 border-emerald-500/60">
+                    <div class="flex justify-between items-center text-sm font-bold">
+                        <span class="text-emerald-300 font-tactical text-base md:text-lg flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]"></span>
+                            <span>🔵 알파 저격반 요격 현황</span>
+                        </span>
+                        <span id="blue-score-text" class="text-emerald-300 font-mono-code text-base font-bold">0 / 7 표적</span>
+                    </div>
+                    <!-- 7 Target Badges for Blue -->
+                    <div id="blue-targets-row" class="grid grid-cols-7 gap-1 text-center text-[10px] font-mono-code">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                    <div id="blue-members" class="text-xs text-emerald-200 font-mono-code truncate">저격반: 대기 중...</div>
+                </div>
+
+                <!-- Red Team 7-Target Status -->
+                <div class="flex flex-col gap-2 p-3 rounded-xl bg-rose-950/40 border-2 border-rose-500/60">
+                    <div class="flex justify-between items-center text-sm font-bold">
+                        <span class="text-amber-300 font-tactical text-base md:text-lg flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_8px_#f43f5e]"></span>
+                            <span>🔴 브라보 저격반 요격 현황</span>
+                        </span>
+                        <span id="red-score-text" class="text-amber-300 font-mono-code text-base font-bold">0 / 7 표적</span>
+                    </div>
+                    <!-- 7 Target Badges for Red -->
+                    <div id="red-targets-row" class="grid grid-cols-7 gap-1 text-center text-[10px] font-mono-code">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                    <div id="red-members" class="text-xs text-rose-200 font-mono-code truncate">저격반: 대기 중...</div>
+                </div>
+            </div>
+
+            <!-- 1st-Person Sniper Scope 2D Canvas Arena with PiP Enemy View -->
+            <div class="relative w-full h-72 md:h-88 bg-slate-950 rounded-3xl border-2 border-emerald-500/60 overflow-hidden shadow-2xl hud-corner">
+                <canvas id="sniper-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+                
+                <!-- Left Top Status Label -->
+                <div class="absolute top-2 left-3 px-3 py-1 bg-slate-950/90 border border-emerald-400/60 rounded-full text-xs font-mono-code text-emerald-300 z-10 flex items-center gap-2 shadow">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>OPTICS //</span>
+                    <span id="sniper-status-label" class="font-bold text-yellow-300">1인칭 고배율 밀닷 조준경 활성</span>
+                </div>
+
+                <!-- Right Top Tactical Ping Help -->
+                <div class="absolute top-2 right-3 px-3 py-1 bg-slate-950/90 border border-emerald-400/60 rounded-full text-[11px] font-tactical text-emerald-300 z-10 flex items-center gap-1.5 shadow">
+                    <span>👆 캔버스 터치:</span>
+                    <span class="text-yellow-300">레이저 핑(Ping)</span>
+                </div>
+
+                <!-- Bottom Status Ticker inside Canvas -->
+                <div class="absolute bottom-2 left-3 right-3 px-3 py-1 bg-slate-950/80 border border-slate-800 rounded-xl text-[11px] font-mono-code text-slate-400 flex items-center justify-between">
+                    <span id="canvas-status-stream">> [SYS] 표적 직각삼각형 앙각 분석 중... sin·cos·tan 삼각비 판별 요망</span>
+                    <span class="text-emerald-400 font-bold hidden sm:inline">1ST-PERSON MIL-DOT SCOPE</span>
+                </div>
+            </div>
+
+            <!-- Cooperative 4-Step Pipeline Workspace -->
+            <div id="action-box" class="relative bg-slate-950/95 neon-border-green rounded-3xl p-4 md:p-6 shadow-2xl flex flex-col items-center text-center scope-glow hud-corner">
+                
+                <!-- Smoke Blind Screen Overlay -->
+                <div id="smoke-overlay" class="hidden absolute inset-0 rounded-3xl z-30 flex flex-col items-center justify-center p-6 text-center bg-slate-900/95 backdrop-blur-md">
+                    <span class="text-5xl animate-bounce mb-3">💨</span>
+                    <h4 class="text-2xl font-tactical text-amber-400 mb-1">상대 저격반의 전술 연막탄 투척!</h4>
+                    <p class="text-sm text-slate-200 mb-4">조준경 렌즈가 연막으로 뿌옇게 흐려졌습니다! 렌즈 와이퍼를 연속 클릭해 시야를 확보하세요!</p>
+                    <button onclick="cleanSmoke()" class="px-6 py-3 bg-gradient-to-r from-emerald-400 to-teal-300 text-slate-950 font-tactical text-lg rounded-xl shadow-lg active:scale-95">
+                        🧹 렌즈 와이퍼 가동 (<span id="smoke-wipe-count">5</span>회 남음)
+                    </button>
+                </div>
+
+                <!-- 5-Second Overheat Lockout Overlay -->
+                <div id="lockout-penalty-box" class="hidden absolute inset-0 bg-slate-950/95 rounded-3xl z-40 flex flex-col items-center justify-center p-6 text-center border-4 border-rose-500 danger-siren backdrop-blur-md">
+                    <span class="text-5xl animate-bounce mb-2">⚠️</span>
+                    <h4 class="text-2xl font-tactical text-rose-400 mb-1">조준경 영점 왜곡! 긴급 영점 보정 중</h4>
+                    <p class="text-xs md:text-sm text-slate-200 mb-3">
+                        삼각비 모드 또는 특수각 연산 오류! 무작위 찍기를 방지하기 위해 5초간 사격 통제 콘솔이 잠금 처리됩니다.<br>
+                        팀원들과 직각삼각형 빗변/밑변/높이와 특수각 비를 다시 정밀 검산하세요!
+                    </p>
+                    <div class="px-5 py-2.5 rounded-2xl bg-rose-950 border-2 border-rose-400 font-tactical text-2xl text-yellow-300 flex items-center gap-2">
+                        <span>⏳ 영점 보정까지:</span>
+                        <span id="lockout-timer-num" class="text-3xl font-mono text-rose-400">5.0</span>초
+                    </div>
+                </div>
+
+                <!-- Badges -->
+                <div class="flex flex-wrap items-center justify-center gap-2 mb-3">
+                    <span id="my-team-badge" class="text-xs px-3.5 py-1 rounded-full font-bold font-tactical">소속 저격반</span>
+                    <span id="my-role-badge" class="text-xs px-3.5 py-1 bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 rounded-full font-bold">내 포지션</span>
+                    <span id="target-fort-badge" class="text-xs px-3.5 py-1 bg-rose-500/20 text-rose-300 border border-rose-500/40 rounded-full font-bold font-mono-code">
+                        🎯 표적 : <span id="current-op-name">표적 #1 : 해안 통신탑</span>
+                    </span>
+                </div>
+
+                <!-- Right Triangle Telemetry Clue Display -->
+                <div class="w-full max-w-3xl bg-slate-900/90 border-2 border-emerald-400/80 rounded-2xl p-3.5 md:p-5 shadow-inner mb-3 hud-corner">
+                    <div class="text-xs font-semibold text-emerald-300 mb-1.5 tracking-wider uppercase flex items-center justify-between px-2 font-mono-code">
+                        <span>[TACTICAL TELEMETRY // TARGET TRIANGLE]</span>
+                        <span id="telemetry-distance-label" class="text-teal-300">RANGE: LOCK_READY</span>
+                    </div>
+                    <div id="triangle-clue-display" class="text-lg md:text-2xl font-tactical text-yellow-300 tracking-wide font-mono-code py-1 leading-relaxed">
+                        표적 직각삼각형 제원 수신 중...
+                    </div>
+                </div>
+
+                <!-- Trigonometry Formula Assembly HUD -->
+                <div class="w-full max-w-2xl bg-slate-900/70 border border-emerald-500/40 rounded-xl p-2.5 mb-3 text-xs font-mono-code">
+                    <div class="text-slate-400 text-[11px] mb-1.5 flex items-center justify-center gap-1">
+                        <span>🧩</span><span>삼각비 조준기 : 삼각비 모드 ➔ 특수각 비 ➔ 목표 변 길이 ➔ 락온!</span>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-center gap-2 text-sm md:text-base font-bold">
+                        <span id="slot-mode" class="px-2.5 py-1 rounded bg-slate-800 border border-slate-600 text-slate-400 font-bold transition-all">
+                            모드 선택 (sin/cos/tan)
+                        </span>
+                        <span class="text-slate-400">➔</span>
+                        <span id="slot-angle" class="px-2.5 py-1 rounded bg-slate-800 border border-slate-600 text-slate-400 font-bold transition-all">
+                            특수각 비율
+                        </span>
+                        <span class="text-slate-400">➔</span>
+                        <div id="slot-length" class="px-2.5 py-1 rounded bg-slate-800 border border-slate-600 text-slate-400 font-bold transition-all">
+                            목표 변(거리/고도) 도출 대기
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Controls -->
+                <div class="w-full max-w-xl flex flex-col items-center gap-2.5">
+                    <div id="step-instruction" class="text-sm md:text-base font-bold text-emerald-200 min-h-[40px] flex items-center justify-center px-2">
+                        단계 안내 로딩 중...
+                    </div>
+
+                    <!-- Spectator Dual-Team Live Broadcast Panel -->
+                    <div id="spectator-broadcast-panel" class="hidden w-full max-w-2xl bg-gradient-to-r from-slate-900/90 via-purple-950/80 to-slate-900/90 border-2 border-purple-400/80 rounded-2xl p-4 shadow-2xl hud-corner">
+                        <div class="flex items-center justify-between border-b border-purple-500/40 pb-2 mb-3">
+                            <span class="text-xs font-mono-code text-purple-300 font-bold flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+                                <span>ON-AIR // 대형 스크린 실시간 중계석</span>
+                            </span>
+                            <span class="text-[11px] font-tactical text-yellow-300">교사 화면: 학생 턴 미개입</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                            <div class="p-2.5 rounded-xl bg-teal-950/60 border border-emerald-500/50">
+                                <div class="text-xs text-emerald-300 font-bold font-tactical mb-1 flex items-center justify-between">
+                                    <span>🔵 고스트 알파 (블루)</span>
+                                    <span id="spec-blue-target" class="text-[10px] text-yellow-300 font-mono-code">표적 #1</span>
+                                </div>
+                                <div id="spec-blue-stage" class="text-xs font-bold text-white mb-1">1단계: 모드 선별</div>
+                                <div id="spec-blue-actor" class="text-[11px] text-emerald-200 font-mono-code truncate">주자: 대기 중</div>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-rose-950/60 border border-rose-500/50">
+                                <div class="text-xs text-rose-300 font-bold font-tactical mb-1 flex items-center justify-between">
+                                    <span>🔴 팬텀 브라보 (레드)</span>
+                                    <span id="spec-red-target" class="text-[10px] text-yellow-300 font-mono-code">표적 #1</span>
+                                </div>
+                                <div id="spec-red-stage" class="text-xs font-bold text-white mb-1">1단계: 모드 선별</div>
+                                <div id="spec-red-actor" class="text-[11px] text-rose-200 font-mono-code truncate">주자: 대기 중</div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Step 0: Choose Trig Mode (sin / cos / tan Buttons) -->
@@ -924,6 +1486,8 @@
                         if (!msg) return;
                         if (msg.type === 'LOCAL_PING' && msg.team === myTeam) {
                             addTacticalPing(msg.x, msg.y, msg.sender);
+                        } else if (msg.type === 'SYNC_STATE' && msg.payload) {
+                            applyRoomState(msg.payload);
                         }
                     };
                 }
@@ -960,6 +1524,52 @@
             }
 
             window.addEventListener('beforeunload', leaveRoomCleanup);
+        };
+
+        // Teacher Spectator / Broadcaster Entry Function
+        window.joinSpectator = async function() {
+            const codeInput = document.getElementById('room-code');
+            const code = (codeInput ? codeInput.value.trim() : '') || 'sniper301';
+
+            currentUserName = '교사 중계석';
+            currentRoomCode = code;
+            myTeam = 'spectator';
+
+            try {
+                if (window.BroadcastChannel) {
+                    if (bc) bc.close();
+                    bc = new BroadcastChannel(`trigo_sniper_${currentRoomCode}`);
+                    bc.onmessage = (event) => {
+                        const msg = event.data;
+                        if (!msg) return;
+                        if (msg.type === 'LOCAL_PING') {
+                            addTacticalPing(msg.x, msg.y, msg.sender);
+                        } else if (msg.type === 'SYNC_STATE' && msg.payload) {
+                            applyRoomState(msg.payload);
+                        }
+                    };
+                }
+            } catch (e) {}
+
+            document.getElementById('lobby-screen').classList.add('hidden');
+            document.getElementById('battle-screen').classList.remove('hidden');
+            initSniperCanvas();
+            sfx.victoryFanfare();
+
+            try {
+                if (db) {
+                    const roomRef = doc(db, 'trigo_sniper_rooms', currentRoomCode);
+                    startFirestoreListener(roomRef);
+                    const snap = await getDoc(roomRef);
+                    if (snap.exists()) {
+                        applyRoomState(snap.data());
+                    } else {
+                        applyRoomState(createInitialRoomData());
+                    }
+                }
+            } catch (err) {
+                applyRoomState(createInitialRoomData());
+            }
         };
 
         async function leaveRoomCleanup() {
@@ -1031,7 +1641,7 @@
 
             if (data.lastPing && (!window.lastObservedPingId || window.lastObservedPingId !== data.lastPing.id)) {
                 window.lastObservedPingId = data.lastPing.id;
-                if (data.lastPing.team === myTeam) {
+                if (myTeam === 'spectator' || data.lastPing.team === myTeam) {
                     addTacticalPing(data.lastPing.x, data.lastPing.y, data.lastPing.sender);
                 }
             }
@@ -1060,6 +1670,11 @@
 
         async function syncStateUpdate(nextData) {
             applyRoomState(nextData);
+            if (bc) {
+                try {
+                    bc.postMessage({ type: 'SYNC_STATE', payload: nextData });
+                } catch (e) {}
+            }
             if (!useFallback && db) {
                 try {
                     const roomRef = doc(db, 'trigo_sniper_rooms', currentRoomCode);
@@ -1121,6 +1736,74 @@
 
         function updatePipelineUI(data) {
             const team = myTeam;
+
+            // Handle Spectator / Broadcaster View
+            if (team === 'spectator') {
+                const specPanel = document.getElementById('spectator-broadcast-panel');
+                const modeControl = document.getElementById('mode-select-control');
+                const ratioControl = document.getElementById('ratio-select-control');
+                const numControl = document.getElementById('number-input-control');
+                const fireControl = document.getElementById('fire-payload-control');
+                const waitingNotice = document.getElementById('waiting-notice');
+
+                if (specPanel) specPanel.classList.remove('hidden');
+                if (modeControl) modeControl.classList.add('hidden');
+                if (ratioControl) ratioControl.classList.add('hidden');
+                if (numControl) numControl.classList.add('hidden');
+                if (fireControl) fireControl.classList.add('hidden');
+                if (waitingNotice) waitingNotice.classList.add('hidden');
+
+                const teamBadge = document.getElementById('my-team-badge');
+                if (teamBadge) {
+                    teamBadge.innerText = `📺 ON-AIR // 교사 공식 중계석`;
+                    teamBadge.className = 'text-xs px-3.5 py-1 bg-purple-500/30 text-purple-300 border border-purple-400 rounded-full font-bold font-tactical animate-pulse';
+                }
+                const roleBadge = document.getElementById('my-role-badge');
+                if (roleBadge) {
+                    roleBadge.innerText = `관전 모드 (학생 풀이 미방해)`;
+                    roleBadge.className = 'text-xs px-3.5 py-1 bg-slate-800 text-slate-300 border border-slate-600 rounded-full font-bold font-mono-code';
+                }
+
+                const stageNames = ["① 관측병", "② 탄도 장전사", "③ 사격 통제관", "④ 마크스맨 🎯"];
+                const bMembers = cleanMemberList(data.blueMembers || []);
+                const rMembers = cleanMemberList(data.redMembers || []);
+                const bStage = data.blueStage || 0;
+                const rStage = data.redStage || 0;
+                const bKills = data.blueKills || 0;
+                const rKills = data.redKills || 0;
+                const bTarget = Math.min(7, bKills + 1);
+                const rTarget = Math.min(7, rKills + 1);
+
+                const bActorIdx = getStageActorIndex(bStage, Math.max(1, bMembers.length), bTarget);
+                const rActorIdx = getStageActorIndex(rStage, Math.max(1, rMembers.length), rTarget);
+
+                const specBTarget = document.getElementById('spec-blue-target');
+                const specBStage = document.getElementById('spec-blue-stage');
+                const specBActor = document.getElementById('spec-blue-actor');
+                if (specBTarget) specBTarget.innerText = `표적 #${bTarget}/7 (${bKills}격파)`;
+                if (specBStage) specBStage.innerText = stageNames[bStage] || '대기 중';
+                if (specBActor) specBActor.innerText = `현재 주자: ${bMembers[bActorIdx] ? bMembers[bActorIdx].name : '대기 중'}`;
+
+                const specRTarget = document.getElementById('spec-red-target');
+                const specRStage = document.getElementById('spec-red-stage');
+                const specRActor = document.getElementById('spec-red-actor');
+                if (specRTarget) specRTarget.innerText = `표적 #${rTarget}/7 (${rKills}격파)`;
+                if (specRStage) specRStage.innerText = stageNames[rStage] || '대기 중';
+                if (specRActor) specRActor.innerText = `현재 주자: ${rMembers[rActorIdx] ? rMembers[rActorIdx].name : '대기 중'}`;
+
+                const instEl = document.getElementById('step-instruction');
+                if (instEl) {
+                    instEl.innerHTML = `<span class="text-yellow-300">📡 [실시간 중계 중] 양 팀의 삼각비 저격 작전을 관전하고 있습니다.</span>`;
+                }
+
+                const leadMission = bKills >= rKills ? data.blueMission : data.redMission;
+                if (leadMission) {
+                    const clueEl = document.getElementById('triangle-clue-display');
+                    if (clueEl) clueEl.innerText = `[선두팀 힌트] ${leadMission.clue}`;
+                }
+                return;
+            }
+
             const myRawMembers = team === 'blue' ? (data.blueMembers || []) : (data.redMembers || []);
             const myMembers = cleanMemberList(myRawMembers);
             const currentStage = team === 'blue' ? (data.blueStage || 0) : (data.redStage || 0);
@@ -1550,7 +2233,6 @@
         }
 
         function triggerLocalSniperFire(payloadType) {
-            // Local 1st-person shot: flash across center of screen
             muzzleFlashes.push({
                 x: canvas.width / 2,
                 y: canvas.height / 2,
@@ -1563,7 +2245,6 @@
 
         function triggerSniperEvent(snipeData) {
             if (snipeData.fromTeam !== myTeam) {
-                // Opponent fired! Spawn muzzle flash on distant enemy ridge + tracer bullet across sky
                 const distantX = canvas.width * 0.85;
                 const distantY = canvas.height * 0.65;
                 muzzleFlashes.push({
@@ -1610,15 +2291,13 @@
             const midX = w / 2;
             const midY = h / 2;
 
-            // Breathing scope sway
             scopeSwayX = Math.sin(Date.now() / 900) * 4;
             scopeSwayY = Math.cos(Date.now() / 1100) * 3;
 
-            // 1. Distant Battlefield Landscape (Horizon, Mountain Silhouettes, City/Harbor)
+            // 1. Distant Battlefield Landscape
             ctx.fillStyle = '#020b07';
             ctx.fillRect(0, 0, w, h);
 
-            // Distant Mountains / Horizon
             ctx.fillStyle = '#051f15';
             ctx.beginPath();
             ctx.moveTo(0, h * 0.72);
@@ -1631,19 +2310,16 @@
             ctx.closePath();
             ctx.fill();
 
-            // Distant City/Harbor Buildings silhouette
             ctx.fillStyle = '#082f21';
             for (let bx = 30; bx < w; bx += 65) {
                 const bHeight = 40 + (bx % 45);
                 ctx.fillRect(bx, h * 0.7 - bHeight, 45, bHeight);
-                // Distant window lights
                 ctx.fillStyle = 'rgba(74, 222, 128, 0.2)';
                 ctx.fillRect(bx + 8, h * 0.7 - bHeight + 10, 8, 8);
                 ctx.fillRect(bx + 26, h * 0.7 - bHeight + 10, 8, 8);
                 ctx.fillStyle = '#082f21';
             }
 
-            // Distant Enemy Sniper Ridge (Right side glint)
             ctx.fillStyle = '#093a29';
             ctx.fillRect(w * 0.82, h * 0.62, 50, 30);
             ctx.font = '9px "JetBrains Mono", monospace';
@@ -1658,7 +2334,7 @@
                 drawActiveTriangleTelemetry(midX + scopeSwayX, midY + scopeSwayY, mission, currentStage);
             }
 
-            // 3. 1st-Person Sniper Optics Mask Vignette (Black Border surrounding Circular Lens)
+            // 3. 1st-Person Sniper Optics Mask Vignette
             const scopeRadius = Math.min(w, h) * 0.46;
 
             ctx.save();
@@ -1668,7 +2344,6 @@
             ctx.fillStyle = '#000000';
             ctx.fill();
 
-            // Outer Scope Lens Ring
             ctx.strokeStyle = '#15803d';
             ctx.lineWidth = 3.5;
             ctx.shadowBlur = 14;
@@ -1677,7 +2352,6 @@
             ctx.arc(midX, midY, scopeRadius, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Inner Range Finder Ring
             ctx.strokeStyle = 'rgba(74, 222, 128, 0.35)';
             ctx.lineWidth = 1.5;
             ctx.setLineDash([8, 6]);
@@ -1687,24 +2361,21 @@
             ctx.setLineDash([]);
             ctx.restore();
 
-            // 4. Mil-Dot High Optic Reticle (Crosshairs with Range Mil-Dots)
+            // 4. Mil-Dot High Optic Reticle
             ctx.save();
             ctx.strokeStyle = 'rgba(74, 222, 128, 0.7)';
             ctx.lineWidth = 1.5;
 
-            // Horizontal line
             ctx.beginPath();
             ctx.moveTo(midX - scopeRadius, midY);
             ctx.lineTo(midX + scopeRadius, midY);
             ctx.stroke();
 
-            // Vertical line
             ctx.beginPath();
             ctx.moveTo(midX, midY - scopeRadius);
             ctx.lineTo(midX, midY + scopeRadius);
             ctx.stroke();
 
-            // Mil-dots on crosshairs
             ctx.fillStyle = '#4ade80';
             for (let d = -4; d <= 4; d++) {
                 if (d === 0) continue;
@@ -1715,10 +2386,10 @@
             }
             ctx.restore();
 
-            // 5. Picture-in-Picture (PiP) Enemy Scope Mini-Feed (Top-Right Inside Scope)
+            // 5. Picture-in-Picture (PiP) Enemy Scope Mini-Feed
             drawEnemyPiPFeed(w - 140, 45);
 
-            // 6. Projectiles, Muzzle Flashes & Tracers
+            // 6. Tracers & Muzzle Flashes
             for (let i = sniperTracers.length - 1; i >= 0; i--) {
                 const t = sniperTracers[i];
                 t.progress += 0.08;
@@ -1739,7 +2410,6 @@
                 if (t.progress >= 1) sniperTracers.splice(i, 1);
             }
 
-            // Muzzle Flashes
             for (let i = muzzleFlashes.length - 1; i >= 0; i--) {
                 const mf = muzzleFlashes[i];
                 mf.alpha -= 0.08;
@@ -1819,19 +2489,14 @@
 
             ctx.save();
             ctx.translate(0, hoverOffset);
-
-            // 1. 고화질 전술 표적 벡터 그래픽 렌더링 (Target Entity Rendering)
             drawTargetEntityVector(ctx, targetType, isLocked, targetColor, time);
-
             ctx.restore();
 
-            // 2. 표적 식별 헤더 태그
             ctx.font = 'bold 11px "JetBrains Mono", monospace';
             ctx.fillStyle = targetColor;
             ctx.textAlign = 'center';
             ctx.fillText(`[${tIndex}번 표적] ${targetName}`, 0, -42);
 
-            // 3. 락온(LOCK-ON) 홀로그램 브래킷 & 십자선 연출
             if (isLocked) {
                 const pulse = Math.sin(time / 150) * 4;
                 const boxW = 44 + pulse;
@@ -1842,40 +2507,24 @@
                 ctx.shadowBlur = 18;
                 ctx.shadowColor = '#ef4444';
 
-                // 4모서리 전술 락온 브래킷 [ ]
                 const cornerLen = 12;
-                // 좌상단
                 ctx.beginPath();
-                ctx.moveTo(-boxW, -boxH + cornerLen);
-                ctx.lineTo(-boxW, -boxH);
-                ctx.lineTo(-boxW + cornerLen, -boxH);
-                // 우상단
-                ctx.moveTo(boxW - cornerLen, -boxH);
-                ctx.lineTo(boxW, -boxH);
-                ctx.lineTo(boxW, -boxH + cornerLen);
-                // 좌하단
-                ctx.moveTo(-boxW, boxH - cornerLen);
-                ctx.lineTo(-boxW, boxH);
-                ctx.lineTo(-boxW + cornerLen, boxH);
-                // 우하단
-                ctx.moveTo(boxW - cornerLen, boxH);
-                ctx.lineTo(boxW, boxH);
-                ctx.lineTo(boxW, boxH - cornerLen);
+                ctx.moveTo(-boxW, -boxH + cornerLen); ctx.lineTo(-boxW, -boxH); ctx.lineTo(-boxW + cornerLen, -boxH);
+                ctx.moveTo(boxW - cornerLen, -boxH); ctx.lineTo(boxW, -boxH); ctx.lineTo(boxW, -boxH + cornerLen);
+                ctx.moveTo(-boxW, boxH - cornerLen); ctx.lineTo(-boxW, boxH); ctx.lineTo(-boxW + cornerLen, boxH);
+                ctx.moveTo(boxW - cornerLen, boxH); ctx.lineTo(boxW, boxH); ctx.lineTo(boxW, boxH - cornerLen);
                 ctx.stroke();
 
-                // 표적 중앙 적색 타겟 십자점
                 ctx.fillStyle = '#ef4444';
                 ctx.beginPath();
                 ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 락온 100% 경보 텍스트
                 ctx.font = 'bold 12px "Orbitron", sans-serif';
                 ctx.fillStyle = '#fca5a5';
                 ctx.shadowBlur = 10;
                 ctx.fillText("⚠️ LOCK-ON 100% [READY TO SNIPE]", 0, 44);
             } else {
-                // 탐색 중 조준 박스
                 ctx.strokeStyle = 'rgba(52, 211, 153, 0.4)';
                 ctx.lineWidth = 1.5;
                 ctx.strokeRect(-32, -26, 64, 52);
@@ -1884,35 +2533,28 @@
             ctx.restore();
         }
 
-        // 7가지 전술 표적 정밀 벡터 렌더러
         function drawTargetEntityVector(ctx, type, isLocked, color, time) {
             ctx.save();
             ctx.shadowBlur = isLocked ? 14 : 6;
             ctx.shadowColor = color;
 
             if (type === 'tower') {
-                // 🗼 1. 해안 감시 통신탑
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 2;
                 ctx.fillStyle = '#06281e';
 
-                // 탑 다리 트러스 구조
                 ctx.beginPath();
-                ctx.moveTo(-18, 22);
-                ctx.lineTo(0, -22);
-                ctx.lineTo(18, 22);
+                ctx.moveTo(-18, 22); ctx.lineTo(0, -22); ctx.lineTo(18, 22);
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
 
-                // 내부 트러스 가로선
                 ctx.beginPath();
                 ctx.moveTo(-12, 8); ctx.lineTo(12, 8);
                 ctx.moveTo(-6, -6); ctx.lineTo(6, -6);
-                ctx.moveTo(0, -22); ctx.lineTo(0, -32); // 최상단 안테나 침
+                ctx.moveTo(0, -22); ctx.lineTo(0, -32);
                 ctx.stroke();
 
-                // 점멸 통신 비컨 라이트
                 const blink = Math.floor(time / 300) % 2 === 0;
                 ctx.fillStyle = blink ? (isLocked ? '#f87171' : '#facc15') : '#334155';
                 ctx.beginPath();
@@ -1920,108 +2562,86 @@
                 ctx.fill();
 
             } else if (type === 'drone') {
-                // 🚁 2. 공중 정찰 드론
                 ctx.fillStyle = '#0f172a';
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 2;
 
-                // 중앙 본체
                 ctx.beginPath();
                 ctx.ellipse(0, 0, 16, 9, 0, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.stroke();
 
-                // 4개 프로펠러 암 & 회전 프로펠러
                 [-18, 18].forEach(dx => {
                     ctx.beginPath();
-                    ctx.moveTo(0, 0);
-                    ctx.lineTo(dx, -6);
+                    ctx.moveTo(0, 0); ctx.lineTo(dx, -6);
                     ctx.stroke();
 
-                    // 고속 회전 블레이드
                     const rSpan = Math.abs(Math.sin(time / 60)) * 14 + 4;
                     ctx.strokeStyle = isLocked ? '#f87171' : '#67e8f9';
                     ctx.beginPath();
-                    ctx.moveTo(dx - rSpan, -6);
-                    ctx.lineTo(dx + rSpan, -6);
+                    ctx.moveTo(dx - rSpan, -6); ctx.lineTo(dx + rSpan, -6);
                     ctx.stroke();
                     ctx.strokeStyle = color;
                 });
 
-                // 감시 카메라 짐벌 렌즈
                 ctx.fillStyle = isLocked ? '#ef4444' : '#38bdf8';
                 ctx.beginPath();
                 ctx.arc(0, 5, 4, 0, Math.PI * 2);
                 ctx.fill();
 
             } else if (type === 'dome') {
-                // 🛰️ 3. 레이더 관측 돔
                 ctx.fillStyle = '#051b14';
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 2;
 
-                // 기지 벙커 콘크리트 베이스
                 ctx.fillRect(-24, 8, 48, 14);
                 ctx.strokeRect(-24, 8, 48, 14);
 
-                // 구형 지오데식 돔
                 ctx.beginPath();
                 ctx.arc(0, 8, 20, Math.PI, 0, false);
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
 
-                // 돔 상단 회전 레이더 안테나
                 const radAngle = (time / 400);
                 const rx = Math.cos(radAngle) * 16;
                 ctx.strokeStyle = isLocked ? '#f87171' : '#facc15';
                 ctx.beginPath();
-                ctx.moveTo(0, -12);
-                ctx.lineTo(rx, -20);
+                ctx.moveTo(0, -12); ctx.lineTo(rx, -20);
                 ctx.stroke();
 
             } else if (type === 'boat') {
-                // 🚢 4. 해안 경비 초계정
                 ctx.fillStyle = '#0b1f18';
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 2;
 
-                // 선체
                 ctx.beginPath();
-                ctx.moveTo(-28, 12);
-                ctx.lineTo(24, 12);
-                ctx.lineTo(34, 0);
-                ctx.lineTo(-24, 0);
+                ctx.moveTo(-28, 12); ctx.lineTo(24, 12); ctx.lineTo(34, 0); ctx.lineTo(-24, 0);
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
 
-                // 함교 및 마스트
                 ctx.fillRect(-12, -10, 18, 10);
                 ctx.strokeRect(-12, -10, 18, 10);
 
                 ctx.beginPath();
-                ctx.moveTo(-4, -10); ctx.lineTo(-4, -20); // 마스트
-                ctx.moveTo(14, 0); ctx.lineTo(22, -6); // 함수 함포
+                ctx.moveTo(-4, -10); ctx.lineTo(-4, -20);
+                ctx.moveTo(14, 0); ctx.lineTo(22, -6);
                 ctx.stroke();
 
-                // 해수면 파도
                 ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
                 ctx.beginPath();
                 ctx.moveTo(-32, 14); ctx.lineTo(36, 14);
                 ctx.stroke();
 
             } else if (type === 'sam') {
-                // 🚀 5. 대공 미사일 포대
                 ctx.fillStyle = '#111827';
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 2;
 
-                // 발사대 캐터필러 받침
                 ctx.fillRect(-22, 10, 44, 12);
                 ctx.strokeRect(-22, 10, 44, 12);
 
-                // 경사각 트윈 미사일 런처
                 [-7, 7].forEach(offset => {
                     ctx.save();
                     ctx.translate(offset, 4);
@@ -2029,7 +2649,6 @@
                     ctx.fillStyle = isLocked ? '#991b1b' : '#334155';
                     ctx.fillRect(0, -5, 26, 10);
                     ctx.strokeRect(0, -5, 26, 10);
-                    // 미사일 탄두
                     ctx.fillStyle = isLocked ? '#f87171' : '#facc15';
                     ctx.beginPath();
                     ctx.moveTo(26, -5); ctx.lineTo(34, 0); ctx.lineTo(26, 5);
@@ -2039,30 +2658,25 @@
                 });
 
             } else if (type === 'heli') {
-                // 🛸 6. 기동 강습 헬기
                 ctx.fillStyle = '#0f172a';
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 2;
 
-                // 헬기 동체
                 ctx.beginPath();
                 ctx.ellipse(0, 0, 24, 12, 0, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.stroke();
 
-                // 꼬리 날개 붐
                 ctx.beginPath();
                 ctx.moveTo(-24, 0); ctx.lineTo(-42, -4); ctx.lineTo(-42, -14);
                 ctx.stroke();
 
-                // 메인 로터 블레이드
                 const rotorSpan = Math.abs(Math.sin(time / 45)) * 34 + 6;
                 ctx.strokeStyle = isLocked ? '#f87171' : '#67e8f9';
                 ctx.beginPath();
                 ctx.moveTo(-rotorSpan, -16); ctx.lineTo(rotorSpan, -16);
                 ctx.stroke();
 
-                // 랜딩 스키드
                 ctx.strokeStyle = color;
                 ctx.beginPath();
                 ctx.moveTo(-16, 12); ctx.lineTo(16, 12);
@@ -2071,37 +2685,26 @@
                 ctx.stroke();
 
             } else {
-                // 👾 7. 지휘관 중장갑 건쉽 (최종 보스)
                 ctx.fillStyle = '#030712';
                 ctx.strokeStyle = isLocked ? '#ef4444' : '#f59e0b';
                 ctx.lineWidth = 2.5;
 
-                // 거대 델타익 장갑 본체
                 ctx.beginPath();
-                ctx.moveTo(0, -24);
-                ctx.lineTo(34, 14);
-                ctx.lineTo(16, 18);
-                ctx.lineTo(0, 10);
-                ctx.lineTo(-16, 18);
-                ctx.lineTo(-34, 14);
+                ctx.moveTo(0, -24); ctx.lineTo(34, 14); ctx.lineTo(16, 18); ctx.lineTo(0, 10); ctx.lineTo(-16, 18); ctx.lineTo(-34, 14);
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
 
-                // 보스 플라즈마 리액터 코어 펄스
                 const corePulse = Math.sin(time / 120) * 3 + 6;
                 ctx.fillStyle = isLocked ? '#f87171' : '#38bdf8';
                 ctx.beginPath();
                 ctx.arc(0, -2, corePulse, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 트윈 제트 엔진 불꽃
                 [-14, 14].forEach(ex => {
                     ctx.fillStyle = '#f59e0b';
                     ctx.beginPath();
-                    ctx.moveTo(ex - 4, 16);
-                    ctx.lineTo(ex + 4, 16);
-                    ctx.lineTo(ex, 24 + Math.random() * 6);
+                    ctx.moveTo(ex - 4, 16); ctx.lineTo(ex + 4, 16); ctx.lineTo(ex, 24 + Math.random() * 6);
                     ctx.closePath();
                     ctx.fill();
                 });
@@ -2117,7 +2720,6 @@
             const enemyStage = enemyTeam === 'blue' ? (lastKnownRoomData.blueStage || 0) : (lastKnownRoomData.redStage || 0);
 
             ctx.save();
-            // PiP Box Background
             ctx.fillStyle = 'rgba(2, 6, 23, 0.85)';
             ctx.strokeStyle = enemyTeam === 'red' ? '#f43f5e' : '#38bdf8';
             ctx.lineWidth = 1.5;
@@ -2126,7 +2728,6 @@
             ctx.fill();
             ctx.stroke();
 
-            // Header
             ctx.font = 'bold 9px "JetBrains Mono", monospace';
             ctx.fillStyle = enemyTeam === 'red' ? '#fb7185' : '#7dd3fc';
             ctx.fillText(`📡 적 저격반 피드`, x + 8, y + 15);
@@ -2139,7 +2740,6 @@
             ctx.fillStyle = enemyStage === 3 ? '#ef4444' : '#a7f3d0';
             ctx.fillText(stageNames[enemyStage] || "대기", x + 8, y + 48);
 
-            // Flashing warning LED if enemy is in stage 3 (lock-on!)
             if (enemyStage === 3) {
                 ctx.fillStyle = (Date.now() % 400 < 200) ? '#ef4444' : '#7f1d1d';
                 ctx.beginPath();
@@ -2164,36 +2764,27 @@
 
             ctx.save();
 
-            // Stage 0: Dashed Guide Triangle
             ctx.strokeStyle = currentStage >= 1 ? '#34d399' : 'rgba(52, 211, 153, 0.4)';
             ctx.lineWidth = 2;
             ctx.setLineDash([4, 4]);
 
-            // Hypotenuse (c)
             ctx.beginPath();
-            ctx.moveTo(originX, originY);
-            ctx.lineTo(apexX, apexY);
+            ctx.moveTo(originX, originY); ctx.lineTo(apexX, apexY);
             ctx.stroke();
 
-            // Base (b)
             ctx.beginPath();
-            ctx.moveTo(originX, originY);
-            ctx.lineTo(rightAngleX, rightAngleY);
+            ctx.moveTo(originX, originY); ctx.lineTo(rightAngleX, rightAngleY);
             ctx.stroke();
 
-            // Height (h)
             ctx.beginPath();
-            ctx.moveTo(rightAngleX, rightAngleY);
-            ctx.lineTo(apexX, apexY);
+            ctx.moveTo(rightAngleX, rightAngleY); ctx.lineTo(apexX, apexY);
             ctx.stroke();
             ctx.setLineDash([]);
 
-            // Right Angle Square Symbol
             ctx.strokeStyle = '#4ade80';
             ctx.lineWidth = 1.5;
             ctx.strokeRect(rightAngleX - 12, rightAngleY - 12, 12, 12);
 
-            // Angle arc at origin
             ctx.strokeStyle = '#facc15';
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -2204,7 +2795,6 @@
             ctx.fillStyle = '#fef08a';
             ctx.fillText(`θ = ${mission.angle}°`, originX + 26, originY - 8);
 
-            // Stage 1: Highlight Mode Sides
             if (currentStage >= 1) {
                 ctx.strokeStyle = '#facc15';
                 ctx.lineWidth = 3;
@@ -2212,27 +2802,14 @@
                 ctx.shadowColor = '#facc15';
 
                 if (mission.mode === 'sin') {
-                    ctx.beginPath();
-                    ctx.moveTo(originX, originY);
-                    ctx.lineTo(apexX, apexY);
-                    ctx.lineTo(rightAngleX, rightAngleY);
-                    ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(originX, originY); ctx.lineTo(apexX, apexY); ctx.lineTo(rightAngleX, rightAngleY); ctx.stroke();
                 } else if (mission.mode === 'cos') {
-                    ctx.beginPath();
-                    ctx.moveTo(apexX, apexY);
-                    ctx.lineTo(originX, originY);
-                    ctx.lineTo(rightAngleX, rightAngleY);
-                    ctx.stroke();
-                } else { // tan
-                    ctx.beginPath();
-                    ctx.moveTo(originX, originY);
-                    ctx.lineTo(rightAngleX, rightAngleY);
-                    ctx.lineTo(apexX, apexY);
-                    ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(apexX, apexY); ctx.lineTo(originX, originY); ctx.lineTo(rightAngleX, rightAngleY); ctx.stroke();
+                } else {
+                    ctx.beginPath(); ctx.moveTo(originX, originY); ctx.lineTo(rightAngleX, rightAngleY); ctx.lineTo(apexX, apexY); ctx.stroke();
                 }
             }
 
-            // Labels
             ctx.font = 'bold 10px "JetBrains Mono", monospace';
             ctx.fillStyle = '#a7f3d0';
             ctx.fillText(`밑변(b)`, originX + triWidth / 2 - 16, originY + 14);
